@@ -188,13 +188,23 @@
               { "for": { "in": "destLat" } },
               { "for": { "in": "destLng" } },
               { "for": { "in": "tooltips" } }
-            ]
+            ],
+          "dataReductionAlgorithm": {
+                "window": {
+                    "count": 30000
+                }
+            }  
           },
           "values": {
             "select": [
               { "for": { "in": "lineWidth" } },
               { "bind": { "to": "tooltips" } }
-            ]
+            ],
+            "dataReductionAlgorithm": {
+                "window": {
+                    "count": 30000
+                }
+            }  
           }
         }
       }
@@ -207,12 +217,13 @@
     "supportsLandingPage": true,
     "supportsMultiVisualSelection": true,
     "tooltips": {
-    "supportedTypes": {
-      "default": true,
-      "canvas": true
-    },
-    "roles": ["tooltips"],
-    "supportEnhancedTooltips": true
-  }
+      "supportedTypes": {
+        "default": true,
+        "canvas": true
+      },
+      "roles": ["tooltips"],
+      "supportEnhancedTooltips": true
+    }
+
 }
   
