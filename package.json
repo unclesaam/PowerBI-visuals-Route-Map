@@ -13,6 +13,7 @@
     "d3": "7.8.5",
     "leaflet": "^1.9.4",
     "powerbi-visuals-api": "~5.10.0",
+    "powerbi-visuals-utils-chartutils": "^8.1.0",
     "powerbi-visuals-utils-formattingmodel": "5.0.0",
     "powerbi-visuals-utils-tooltiputils": "^6.0.4"
   },
