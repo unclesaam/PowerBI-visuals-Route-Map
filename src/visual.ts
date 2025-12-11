@@ -1,14 +1,13 @@
 "use strict";
 
 import powerbi from "powerbi-visuals-api";
-import { FormattingSettingsService } from "powerbi-visuals-utils-formattingmodel";
+import {FormattingSettingsService} from "powerbi-visuals-utils-formattingmodel";
 import "./../style/visual.less";
-import { VisualFormattingSettingsModel } from "./settings";
+import {VisualFormattingSettingsModel} from "./settings";
 import * as L from "leaflet";
 import * as d3 from "d3";
-import { legendInterfaces, legend, legendData } from "powerbi-visuals-utils-chartutils";
-import { createTooltipServiceWrapper, ITooltipServiceWrapper } from "powerbi-visuals-utils-tooltiputils";
-
+import {legend, legendInterfaces} from "powerbi-visuals-utils-chartutils";
+import {createTooltipServiceWrapper, ITooltipServiceWrapper} from "powerbi-visuals-utils-tooltiputils";
 import VisualConstructorOptions = powerbi.extensibility.visual.VisualConstructorOptions;
 import VisualUpdateOptions = powerbi.extensibility.visual.VisualUpdateOptions;
 import IVisual = powerbi.extensibility.visual.IVisual;
@@ -111,7 +110,7 @@ export class Visual implements IVisual {
 
     private handleContextMenu(): void {
         this.map.on('contextmenu', (event: L.LeafletMouseEvent) => {
-            if (!this.contextMenuShown && (!event.originalEvent.target || 
+            if (!this.contextMenuShown && (!event.originalEvent.target ||
                 !(event.originalEvent.target as Element).closest('.leaflet-interactive'))) {
                 this.contextMenuShown = true;
                 this.selectionManager.showContextMenu({}, {
@@ -141,17 +140,17 @@ export class Visual implements IVisual {
     }
 
     private getColumnByRole(
-    categorical: powerbi.DataViewCategorical,
-    roleName: string
-): powerbi.DataViewCategoricalColumn | powerbi.DataViewValueColumn | undefined {
-    const category = categorical.categories?.find(cat => cat.source.roles?.[roleName]);
-    if (category) return category;
+        categorical: powerbi.DataViewCategorical,
+        roleName: string
+    ): powerbi.DataViewCategoricalColumn | powerbi.DataViewValueColumn | undefined {
+        const category = categorical.categories?.find(cat => cat.source.roles?.[roleName]);
+        if (category) return category;
 
-    const value = categorical.values?.find(val => val.source.roles?.[roleName]);
-    if (value) return value;
+        const value = categorical.values?.find(val => val.source.roles?.[roleName]);
+        if (value) return value;
 
-    return undefined;
-}
+        return undefined;
+    }
 
     public update(options: VisualUpdateOptions) {
         if (this.eventService?.renderingStarted) {
@@ -178,11 +177,11 @@ export class Visual implements IVisual {
             const destLngColumn = this.getColumnByRole(categorical, "destLng");
             const legendColumn = this.getColumnByRole(categorical, "legend");
             const lineWidthColumn = this.getColumnByRole(categorical, "lineWidth");
-            
+
             const tooltipFields = [
                 ...(categorical.values?.filter(v => v.source.roles?.tooltips) || []),
                 ...(categorical.categories?.filter(c => c.source.roles?.tooltips) || [])
-              ];
+            ];
 
             const originValues = originColumn && "values" in originColumn ? originColumn.values : [];
             const originLatValues = originLatColumn && "values" in originLatColumn ? originLatColumn.values : [];
@@ -203,13 +202,13 @@ export class Visual implements IVisual {
                 lineWidth: lineWidthValues ? parseFloat(lineWidthValues[index] as any) : NaN,
                 legendValue: legendValues[index]?.toString() || ''
             })).filter(route => this.isValidRouteData(route));
-     
+
             const showLegend = this.formattingSettings.legendSettings.show.value;
             const legendPositionValue = this.formattingSettings.legendSettings.position.value.value;
             const legendPositionKey = legendInterfaces.LegendPosition[legendPositionValue];
             const defaultColor = this.formattingSettings.routeSettingsCard.lineColor.value.value;
             const legendFontSize = this.formattingSettings.legendSettings.fontSize.value;
-            
+
             this.target.querySelector('.legend-container')?.setAttribute(
                 'style',
                 `--legend-font-size: ${legendFontSize}px;`
@@ -227,7 +226,7 @@ export class Visual implements IVisual {
                         .createSelectionId();
                 }
             });
-            
+
             data.forEach((route, i) => {
                 route.selectionId = selectionIds[i];
             });
@@ -256,41 +255,41 @@ export class Visual implements IVisual {
         defaultColor: string
     ): void {
         const legendContainer = this.target.querySelector('.legend-container') as HTMLElement;
-    
+
         const legendColumn = this.getColumnByRole(this.dataView.categorical, "legend");
         const legendDisplayName = legendColumn?.source?.displayName ?? "Legend";
-    
+
         const customTitle = this.formattingSettings.legendSettings.titleText.value;
         const showTitle = this.formattingSettings.legendSettings.showTitle.value;
-    
+
         const legendTitle = showTitle
             ? (customTitle?.trim() || legendDisplayName)
             : "";
-    
+
         // Only create legend data if there's actually a legend column with values
-        const uniqueValues = legendColumn 
+        const uniqueValues = legendColumn
             ? [...new Set(data.map(route => route.legendValue))].sort()
             : [];
-    
+
         const legendData: legendInterfaces.LegendData = {
             title: legendTitle,
             dataPoints: uniqueValues.map((value) => {
                 let color = this.isHighContrast ? this.foregroundColor : this.getColorForValue(value) ?? defaultColor;
-                
+
                 // Find the original index of this value in the legend column
                 const legendColumn = this.getColumnByRole(this.dataView.categorical, "legend");
-                const originalIndex = legendColumn && "values" in legendColumn 
+                const originalIndex = legendColumn && "values" in legendColumn
                     ? legendColumn.values.findIndex(v => (v?.toString() || "") === value)
                     : -1;
-                
-                if (this.isHighContrast && this.selectedIds.some(id => 
+
+                if (this.isHighContrast && this.selectedIds.some(id =>
                     (id as any).getKey?.() === (this.host.createSelectionIdBuilder()
                         .withCategory(legendColumn as powerbi.DataViewCategoryColumn, originalIndex)
                         .createSelectionId() as any).getKey?.()
                 )) {
                     color = this.foregroundSelectedColor;
                 }
-                
+
                 const selectionId: ISelectionId = legendColumn && originalIndex >= 0
                     ? this.host.createSelectionIdBuilder()
                         .withCategory(legendColumn as powerbi.DataViewCategoryColumn, originalIndex)
@@ -298,7 +297,7 @@ export class Visual implements IVisual {
                     : this.host.createSelectionIdBuilder()
                         .withTable(this.dataView.table, originalIndex)
                         .createSelectionId();
-    
+
                 return {
                     label: value || "(Blank)",
                     color,
@@ -307,30 +306,30 @@ export class Visual implements IVisual {
                 };
             })
         };
-    
+
         const legendPositionKey = position as unknown as keyof typeof legendInterfaces.LegendPosition;
         const legendEnumValue = legendInterfaces.LegendPosition[legendPositionKey];
 
-    
+
         this.legend.changeOrientation(position as legendInterfaces.LegendPosition);
 
-    
+
         const mapContainer = this.target.querySelector('.route-map') as HTMLElement;
         const wrapper = this.target.querySelector("div") as HTMLElement;
-    
+
         if (!show) {
             legendContainer.style.display = 'none';
             mapContainer.style.marginLeft = '0';
-            this.legend.drawLegend({ dataPoints: [] }, viewport);
+            this.legend.drawLegend({dataPoints: []}, viewport);
             return;
         }
-    
+
         legendContainer.style.display = 'block';
         legendContainer.style.marginLeft = "0";
         legendContainer.style.marginTop = "0";
         mapContainer.style.marginLeft = "0";
         mapContainer.style.marginTop = "0";
-    
+
         if (position === legendInterfaces.LegendPosition.Left) {
             wrapper.style.flexDirection = "row";
             legendContainer.style.order = "0";
@@ -364,14 +363,14 @@ export class Visual implements IVisual {
             mapContainer.style.width = "100%";
             mapContainer.style.height = "auto";
         }
-        
-    
+
+
         requestAnimationFrame(() => {
             setTimeout(() => {
                 this.map.invalidateSize();
             }, 50);
         });
-    
+
         this.legend.drawLegend(legendData, viewport);
         this.legend.drawLegend(legendData, viewport);
         this.map.invalidateSize();
@@ -388,7 +387,7 @@ export class Visual implements IVisual {
     }
 
     private handleLegendContextMenu = (event: MouseEvent): void => {
-        if (!this.contextMenuShown && (!event.target || 
+        if (!this.contextMenuShown && (!event.target ||
             !(event.target as Element).closest('.legendItem'))) {
             this.contextMenuShown = true;
             this.selectionManager.showContextMenu({}, {
@@ -400,13 +399,13 @@ export class Visual implements IVisual {
         }
         event.preventDefault();
     }
-    
+
 
     private getColorForValue(value: string): string {
         if (this.isHighContrast) {
             return this.foregroundColor;
         }
-        
+
         // Only use legend-based coloring if a legend column is specifically assigned
         const legendColumn = this.getColumnByRole(this.dataView.categorical, "legend");
         if (!legendColumn) {
@@ -436,61 +435,61 @@ export class Visual implements IVisual {
         viewport: powerbi.IViewport,
         tooltipFields: (powerbi.DataViewValueColumn | powerbi.DataViewCategoryColumn)[],
         categorical: powerbi.DataViewCategorical
-      ): void {
+    ): void {
         if (!this.map || !data.length) return;
-    
+
         this.routeGroup.clearLayers();
-    
+
         const lineWidthSetting = this.formattingSettings.routeSettingsCard.lineWidth.value;
         const bubbleSizeSetting = this.formattingSettings.routeSettingsCard.bubbleSize.value;
-    
+
         const validWidths = data.map(d => d.lineWidth).filter(v => !isNaN(v));
         const hasValidWidths = validWidths.length > 0;
         const minWidth = lineWidthSetting;
         const maxWidth = lineWidthSetting * 3;
         const minValue = hasValidWidths ? Math.min(...validWidths) : 0;
         const maxValue = hasValidWidths ? Math.max(...validWidths) : 1;
-    
+
         const bounds = L.latLngBounds([]);
-    
+
         const valueColumns = categorical?.values || [];
 
         const highlightedColumn = valueColumns.find(col =>
             col.highlights && col.highlights.some(h => h !== null)
         );
         const hasHighlights = !!highlightedColumn;
- 
 
         const originCounts: Record<string, number> = {};
         const destCounts: Record<string, number> = {};
-    
+
+
         const originMarkers: Record<string, RouteData[]> = {};
         const destMarkers: Record<string, RouteData[]> = {};
-    
+
         data.forEach((route, index) => {
             const originKey = `${route.originLat},${route.originLng}`;
             const destKey = `${route.destLat},${route.destLng}`;
-    
+
             originCounts[originKey] = (originCounts[originKey] || 0) + 1;
             destCounts[destKey] = (destCounts[destKey] || 0) + 1;
-    
+
             originMarkers[originKey] = originMarkers[originKey] || [];
             destMarkers[destKey] = destMarkers[destKey] || [];
-    
+
             originMarkers[originKey].push(route);
-            destMarkers[destKey].push(route);        
+            destMarkers[destKey].push(route);
         });
-    
+
         const getRadius = (count: number, max: number) => {
             const minR = bubbleSizeSetting;
             const maxR = bubbleSizeSetting * 2.5;
             const scale = Math.sqrt(count / max);
             return minR + scale * (maxR - minR);
         };
-    
+
         const maxOrigin = Math.max(...Object.values(originCounts));
         const maxDest = Math.max(...Object.values(destCounts));
-    
+
         data.forEach((route, index) => {
             const range = Math.max(maxValue - minValue, 1e-6);
             const norm = (route.lineWidth - minValue) / range;
@@ -498,24 +497,23 @@ export class Visual implements IVisual {
                 ? minWidth + Math.pow(norm, 0.5) * (maxWidth - minWidth)
                 : lineWidthSetting;
             const legendCol = this.getColumnByRole(this.dataView.categorical, "legend");
-            const routeColor = legendCol 
+            const routeColor = legendCol
                 ? this.getColorForValue(route.legendValue)
-                : (this.formattingSettings.dataPointCardSettings.defaultColor.value.value || 
-                   this.formattingSettings.routeSettingsCard.lineColor.value.value);
+                : this.formattingSettings.routeSettingsCard.lineColor.value.value;
             const useStraightLines = this.formattingSettings.routeSettingsCard.useStraightLines.value;
-            const pathCoordinates: [number, number][] = useStraightLines 
+            const pathCoordinates: [number, number][] = useStraightLines
                 ? [[route.originLat, route.originLng], [route.destLat, route.destLng]]
                 : this.getCurvedPathCoordinates(
                     [route.originLat, route.originLng],
                     [route.destLat, route.destLng]
                 );
-    
+
             const legendCol2 = this.getColumnByRole(this.dataView.categorical, "legend");
             // Find the original index of this route's legend value in the legend column
             const originalLegendIndex = legendCol2 && "values" in legendCol2
                 ? legendCol2.values.findIndex(v => (v?.toString() || "") === route.legendValue)
                 : -1;
-            
+
             const selectionId = legendCol2 && originalLegendIndex >= 0
                 ? this.host.createSelectionIdBuilder()
                     .withCategory(legendCol2 as powerbi.DataViewCategoryColumn, originalLegendIndex)
@@ -527,25 +525,25 @@ export class Visual implements IVisual {
 
 
             const isSelected =
-            !hasHighlights && (
-                this.selectedIds.length === 0 ||
-                this.selectedIds.some(id =>
-                    (id as any).getKey?.() === (selectionId as any).getKey?.()
-                )
-            );
+                !hasHighlights && (
+                    this.selectedIds.length === 0 ||
+                    this.selectedIds.some(id =>
+                        (id as any).getKey?.() === (selectionId as any).getKey?.()
+                    )
+                );
 
             const opacity = (hasHighlights && !isHighlighted) || (!hasHighlights && !isSelected) ? 0.3 : 1;
 
-            const lineColor = this.isHighContrast 
-                ? (isSelected ? this.foregroundSelectedColor : this.foregroundColor) 
+            const lineColor = this.isHighContrast
+                ? (isSelected ? this.foregroundSelectedColor : this.foregroundColor)
                 : routeColor;
-            
-            const fillColor = this.isHighContrast 
-                ? (isSelected ? this.foregroundSelectedColor : this.backgroundColor) 
+
+            const fillColor = this.isHighContrast
+                ? (isSelected ? this.foregroundSelectedColor : this.backgroundColor)
                 : routeColor;
-            
+
             const fillOpacity = this.isHighContrast ? 1 : opacity;
-    
+
             const polyline = L.polyline(pathCoordinates, {
                 color: lineColor,
                 weight: width,
@@ -560,11 +558,10 @@ export class Visual implements IVisual {
                     () => tooltipFields.map(field => ({
                         displayName: field.source.displayName,
                         value: Array.isArray(field.values) ? field.values[index]?.toString() ?? "" : ""
-                      })),
+                    })),
                     () => route.selectionId ? route.selectionId.getSelector() : null
                 );
-            }
-            else {
+            } else {
                 const polylineElement = polyline.getElement();
                 const d3PolylineSelection = d3.select(polylineElement);
                 this.tooltipServiceWrapper.addTooltip(
@@ -579,7 +576,7 @@ export class Visual implements IVisual {
                     () => route.selectionId ? route.selectionId.getSelector() : null
                 );
             }
-            
+
             polyline.on("click", (e: any) => {
                 const multiSelect = e.originalEvent.ctrlKey || e.originalEvent.metaKey;
                 this.selectionManager.select(route.selectionId, multiSelect).then(ids => {
@@ -601,16 +598,16 @@ export class Visual implements IVisual {
                 e.originalEvent.preventDefault();
                 e.originalEvent.stopPropagation();
             });
-            
+
             bounds.extend([route.originLat, route.originLng]);
             bounds.extend([route.destLat, route.destLng]);
-    
+
             const originKey = `${route.originLat},${route.originLng}`;
             const destKey = `${route.destLat},${route.destLng}`;
-    
+
             const originRadius = getRadius(originCounts[originKey], maxOrigin);
             const destRadius = getRadius(destCounts[destKey], maxDest);
-    
+
             const originCircle = L.circleMarker([route.originLat, route.originLng], {
                 radius: originRadius,
                 color: lineColor,
@@ -618,7 +615,7 @@ export class Visual implements IVisual {
                 fillOpacity: fillOpacity,
                 weight: 2
             }).addTo(this.routeGroup);
-            
+
             if (tooltipFields.length > 0) {
                 const originElement = originCircle.getElement();
                 const d3OriginSelection = d3.select(originElement);
@@ -630,36 +627,36 @@ export class Visual implements IVisual {
                     })),
                     () => route.selectionId ? route.selectionId.getSelector() : null
                 );
-            }else{
-            const originElement = originCircle.getElement();
-            const d3OriginSelection = d3.select(originElement);
-            this.tooltipServiceWrapper.addTooltip(
-                d3OriginSelection,
-                () => [{
-                    displayName: "Origin",
-                    value: route.origin || `${route.originLat}, ${route.originLng}`
-                }],
-                () => route.selectionId ? route.selectionId.getSelector() : null
-            );
+            } else {
+                const originElement = originCircle.getElement();
+                const d3OriginSelection = d3.select(originElement);
+                this.tooltipServiceWrapper.addTooltip(
+                    d3OriginSelection,
+                    () => [{
+                        displayName: "Origin",
+                        value: route.origin || `${route.originLat}, ${route.originLng}`
+                    }],
+                    () => route.selectionId ? route.selectionId.getSelector() : null
+                );
             }
-            
+
             originCircle.on("click", (e: any) => {
                 const lat = route.originLat;
                 const lng = route.originLng;
-            
+
                 const matchingRoutes = data.filter(r =>
                     r.originLat === lat && r.originLng === lng ||
                     r.destLat === lat && r.destLng === lng
                 );
-            
+
                 const selectionIds = matchingRoutes.map(r => r.selectionId).filter(id => !!id);
-            
+
                 const allSelected = selectionIds.length > 0 && selectionIds.every(sel =>
                     this.selectedIds.some(existing =>
                         (existing as any).getKey?.() === (sel as any).getKey?.()
                     )
                 );
-            
+
                 if (allSelected) {
                     this.selectionManager.clear().then(() => {
                         this.selectedIds = [];
@@ -678,16 +675,16 @@ export class Visual implements IVisual {
                 if (!this.contextMenuShown) {
                     const lat = route.originLat;
                     const lng = route.originLng;
-                
+
                     const matchingRoutes = data.filter(r =>
                         r.originLat === lat && r.originLng === lng ||
                         r.destLat === lat && r.destLng === lng
                     );
-                
+
                     const selectionIds = matchingRoutes.map(r => r.selectionId).filter(id => !!id);
-                    
+
                     const contextMenuSelectionId = selectionIds.length > 0 ? selectionIds[0] : route.selectionId;
-                    
+
                     this.contextMenuShown = true;
                     this.selectionManager.showContextMenu(contextMenuSelectionId, {
                         x: e.originalEvent.clientX,
@@ -699,8 +696,8 @@ export class Visual implements IVisual {
                 e.originalEvent.preventDefault();
                 e.originalEvent.stopPropagation();
             });
-            
-    
+
+
             const destCircle = L.circleMarker([route.destLat, route.destLng], {
                 radius: destRadius,
                 color: lineColor,
@@ -708,7 +705,7 @@ export class Visual implements IVisual {
                 fillOpacity: fillOpacity,
                 weight: 2
             }).addTo(this.routeGroup);
-    
+
             if (tooltipFields.length > 0) {
                 const destElement = destCircle.getElement();
                 const d3DestSelection = d3.select(destElement);
@@ -720,7 +717,7 @@ export class Visual implements IVisual {
                     })),
                     () => route.selectionId ? route.selectionId.getSelector() : null
                 );
-            }else{
+            } else {
                 const destElement = destCircle.getElement();
                 const d3DestSelection = d3.select(destElement);
                 this.tooltipServiceWrapper.addTooltip(
@@ -732,7 +729,7 @@ export class Visual implements IVisual {
                     () => route.selectionId ? route.selectionId.getSelector() : null
                 );
             }
-    
+
             destCircle.on("click", (e: any) => {
                 const lat = route.destLat;
                 const lng = route.destLng;
@@ -740,15 +737,15 @@ export class Visual implements IVisual {
                     r.originLat === lat && r.originLng === lng ||
                     r.destLat === lat && r.destLng === lng
                 );
-            
+
                 const selectionIds = matchingRoutes.map(r => r.selectionId).filter(id => !!id);
-            
+
                 const allSelected = selectionIds.length > 0 && selectionIds.every(sel =>
                     this.selectedIds.some(existing =>
                         (existing as any).getKey?.() === (sel as any).getKey?.()
                     )
                 );
-            
+
                 if (allSelected) {
                     this.selectionManager.clear().then(() => {
                         this.selectedIds = [];
@@ -771,11 +768,11 @@ export class Visual implements IVisual {
                         r.originLat === lat && r.originLng === lng ||
                         r.destLat === lat && r.destLng === lng
                     );
-                
+
                     const selectionIds = matchingRoutes.map(r => r.selectionId).filter(id => !!id);
-                    
+
                     const contextMenuSelectionId = selectionIds.length > 0 ? selectionIds[0] : route.selectionId;
-                    
+
                     this.contextMenuShown = true;
                     this.selectionManager.showContextMenu(contextMenuSelectionId, {
                         x: e.originalEvent.clientX,
@@ -788,12 +785,12 @@ export class Visual implements IVisual {
                 e.originalEvent.stopPropagation();
             });
         });
-    
+
         if (bounds.isValid()) {
             this.map.fitBounds(bounds);
         }
     }
-    
+
 
     private getCurvedPathCoordinates(start: [number, number], end: [number, number]): [number, number][] {
         const latlngs: [number, number][] = [];
@@ -819,7 +816,7 @@ export class Visual implements IVisual {
 
         if (options.objectName === 'dataPoint') {
             const legendColumn = this.getColumnByRole(this.dataView?.categorical, "legend");
-            
+
             if (legendColumn && "values" in legendColumn) {
                 // Show individual color options for each legend value
                 const uniqueValues = [...new Set(legendColumn.values.map(v => v?.toString() || ""))];
@@ -841,20 +838,20 @@ export class Visual implements IVisual {
                         objectName: 'dataPoint',
                         selector: selectionId.getSelector(),
                         properties: {
-                            fill: { solid: { color } }
+                            fill: {solid: {color}}
                         }
                     });
                 });
             } else {
                 // Show default color option when no legend column is assigned
-                const currentDefaultColor = this.formattingSettings.dataPointCardSettings.defaultColor.value.value || 
-                                          this.formattingSettings.routeSettingsCard.lineColor.value.value;
+                const currentDefaultColor = this.formattingSettings.dataPointCardSettings.defaultColor.value.value ||
+                    this.formattingSettings.routeSettingsCard.lineColor.value.value;
                 instances.push({
                     displayName: "Default color",
                     objectName: 'dataPoint',
                     selector: null,
                     properties: {
-                        defaultColor: { solid: { color: currentDefaultColor } }
+                        defaultColor: {solid: {color: currentDefaultColor}}
                     }
                 });
             }
