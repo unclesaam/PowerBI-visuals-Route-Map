@@ -24,9 +24,9 @@ export class LegendManager {
         legendContainer: HTMLElement,
         target: HTMLElement,
         host: IVisualHost,
-        dataView: DataView,
-        formattingSettings: VisualFormattingSettingsModel,
-        colorManager: ColorManager,
+        dataView: DataView | null,
+        formattingSettings: VisualFormattingSettingsModel | null,
+        colorManager: ColorManager | null,
         selectedIds: powerbi.extensibility.ISelectionId[],
         selectionManager: powerbi.extensibility.ISelectionManager,
         mapInvalidateSizeCallback: () => void
@@ -42,6 +42,18 @@ export class LegendManager {
         this.legend = legend.createLegend(legendContainer, true);
     }
 
+    public updateDependencies(
+        dataView: DataView,
+        formattingSettings: VisualFormattingSettingsModel,
+        colorManager: ColorManager,
+        selectedIds: powerbi.extensibility.ISelectionId[]
+    ): void {
+        this.dataView = dataView;
+        this.formattingSettings = formattingSettings;
+        this.colorManager = colorManager;
+        this.selectedIds = selectedIds;
+    }
+
     public getLegend(): legendInterfaces.ILegend {
         return this.legend;
     }
@@ -54,6 +66,11 @@ export class LegendManager {
         defaultColor: string,
         legendColumn: powerbi.DataViewCategoricalColumn | powerbi.DataViewValueColumn | undefined
     ): void {
+        // Ensure dependencies are set before updating legend
+        if (!this.dataView || !this.formattingSettings || !this.colorManager) {
+            return;
+        }
+
         const legendContainer = this.target.querySelector('.legend-container') as HTMLElement;
 
         const legendDisplayName = legendColumn?.source?.displayName ?? "Legend";

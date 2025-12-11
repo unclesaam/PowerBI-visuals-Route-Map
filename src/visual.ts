@@ -64,6 +64,19 @@ export class Visual implements IVisual {
         this.mapManager = new MapManager(this.mapContainer);
         this.selectionHandler = new SelectionHandler(options.host.createSelectionManager());
 
+        // Initialize LegendManager once in constructor - will be updated in update() method
+        this.legendManager = new LegendManager(
+            legendContainer,
+            this.target,
+            this.host,
+            null,
+            null,
+            null,
+            this.selectionHandler.getSelectedIds(),
+            options.host.createSelectionManager(),
+            () => this.mapManager.invalidateSize()
+        );
+
         this.handleContextMenu();
     }
 
@@ -100,17 +113,12 @@ export class Visual implements IVisual {
             this.dataParser = new DataParser(this.host, this.dataView);
             this.colorManager = new ColorManager(this.host.colorPalette, this.dataView, this.formattingSettings);
 
-            const legendContainer = this.target.querySelector('.legend-container') as HTMLElement;
-            this.legendManager = new LegendManager(
-                legendContainer,
-                this.target,
-                this.host,
+            // Update existing LegendManager with current data
+            this.legendManager.updateDependencies(
                 this.dataView,
                 this.formattingSettings,
                 this.colorManager,
-                this.selectionHandler.getSelectedIds(),
-                this.host.createSelectionManager(),
-                () => this.mapManager.invalidateSize()
+                this.selectionHandler.getSelectedIds()
             );
 
             this.routeRenderer = new RouteRenderer(
