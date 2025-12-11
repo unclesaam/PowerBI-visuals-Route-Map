@@ -1,5 +1,4 @@
 "use strict";
-
 import powerbi from "powerbi-visuals-api";
 import {FormattingSettingsService} from "powerbi-visuals-utils-formattingmodel";
 import "./../style/visual.less";
@@ -410,8 +409,7 @@ export class Visual implements IVisual {
         const legendColumn = this.getColumnByRole(this.dataView.categorical, "legend");
         if (!legendColumn) {
             // No legend column assigned, use default color from data point settings if set, otherwise route settings
-            const defaultColor = this.formattingSettings.dataPointCardSettings.defaultColor.value.value;
-            return defaultColor || this.formattingSettings.routeSettingsCard.lineColor.value.value;
+            return this.formattingSettings.routeSettingsCard.lineColor.value.value;
         }
 
         const index = ("values" in legendColumn) ? legendColumn.values.findIndex(v => v?.toString() === value) : -1;
@@ -492,21 +490,23 @@ export class Visual implements IVisual {
 
         data.forEach((route, index) => {
             const range = Math.max(maxValue - minValue, 1e-6);
+
             const norm = (route.lineWidth - minValue) / range;
+
             const width = hasValidWidths
                 ? minWidth + Math.pow(norm, 0.5) * (maxWidth - minWidth)
                 : lineWidthSetting;
+
             const legendCol = this.getColumnByRole(this.dataView.categorical, "legend");
+
             const routeColor = legendCol
                 ? this.getColorForValue(route.legendValue)
                 : this.formattingSettings.routeSettingsCard.lineColor.value.value;
-            const useStraightLines = this.formattingSettings.routeSettingsCard.useStraightLines.value;
-            const pathCoordinates: [number, number][] = useStraightLines
-                ? [[route.originLat, route.originLng], [route.destLat, route.destLng]]
-                : this.getCurvedPathCoordinates(
-                    [route.originLat, route.originLng],
-                    [route.destLat, route.destLng]
-                );
+
+            const pathCoordinates: [number, number][] = this.getCurvedPathCoordinates(
+                [route.originLat, route.originLng],
+                [route.destLat, route.destLng]
+            );
 
             const legendCol2 = this.getColumnByRole(this.dataView.categorical, "legend");
             // Find the original index of this route's legend value in the legend column
@@ -814,54 +814,6 @@ export class Visual implements IVisual {
     public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstance[] {
         const instances: VisualObjectInstance[] = [];
 
-        if (options.objectName === 'dataPoint') {
-            const legendColumn = this.getColumnByRole(this.dataView?.categorical, "legend");
-
-            if (legendColumn && "values" in legendColumn) {
-                // Show individual color options for each legend value
-                const uniqueValues = [...new Set(legendColumn.values.map(v => v?.toString() || ""))];
-
-                uniqueValues.forEach(value => {
-                    const valueIndex = legendColumn.values.findIndex(v => v?.toString() === value);
-                    if (valueIndex === -1) return;
-
-                    const color = this.getColorForValue(value);
-                    const selectionId = this.host.createSelectionIdBuilder()
-                        .withCategory(legendColumn as powerbi.DataViewCategoryColumn, valueIndex)
-                        .createSelectionId();
-
-                    // Use "(Blank)" for empty values to provide a meaningful display name
-                    const displayName = value || "(Blank)";
-
-                    instances.push({
-                        displayName: displayName,
-                        objectName: 'dataPoint',
-                        selector: selectionId.getSelector(),
-                        properties: {
-                            fill: {solid: {color}}
-                        }
-                    });
-                });
-            } else {
-                // Show default color option when no legend column is assigned
-                const metadata = this.dataView?.metadata;
-                const objects = metadata?.objects;
-                const persistedColor = objects?.dataPoint?.defaultColor as powerbi.Fill;
-
-                const currentDefaultColor = persistedColor?.solid?.color ||
-                    this.formattingSettings.dataPointCardSettings.defaultColor.value.value ||
-                    this.formattingSettings.routeSettingsCard.lineColor.value.value;
-                instances.push({
-                    displayName: "Default color",
-                    objectName: 'dataPoint',
-                    selector: null,
-                    properties: {
-                        defaultColor: {solid: {color: currentDefaultColor}}
-                    }
-                });
-            }
-        }
-
         if (options.objectName === 'routeSettings') {
             const metadata = this.dataView?.metadata;
             const objects = metadata?.objects;
@@ -873,9 +825,8 @@ export class Visual implements IVisual {
                     lineWidth: this.formattingSettings.routeSettingsCard.lineWidth.value,
                     lineColor: persistedLineColor || this.formattingSettings.routeSettingsCard.lineColor.value,
                     bubbleSize: this.formattingSettings.routeSettingsCard.bubbleSize.value,
-                    useStraightLines: this.formattingSettings.routeSettingsCard.useStraightLines.value
                 },
-                selector: null
+                selector: null,
             });
         }
 

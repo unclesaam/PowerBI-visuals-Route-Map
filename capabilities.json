@@ -117,12 +117,6 @@
           "type": {
             "numeric": true
           }
-        },
-        "useStraightLines": {
-          "displayName": "Use Straight Lines",
-          "type": {
-            "bool": true
-          }
         }
       }
     },
