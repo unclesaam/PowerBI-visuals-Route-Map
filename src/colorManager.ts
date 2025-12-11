@@ -13,7 +13,6 @@ export class ColorManager {
     private foregroundColor: string;
     private backgroundColor: string;
     private foregroundSelectedColor: string;
-    private hyperlinkColor: string;
 
     constructor(
         colorPalette: IColorPalette,
@@ -29,12 +28,10 @@ export class ColorManager {
             this.foregroundColor = (colorPalette as any).foreground?.value || "#000";
             this.backgroundColor = (colorPalette as any).background?.value || "#fff";
             this.foregroundSelectedColor = (colorPalette as any).foregroundSelected?.value || "#000";
-            this.hyperlinkColor = (colorPalette as any).hyperlink?.value || "#000";
         } else {
             this.foregroundColor = "#000";
             this.backgroundColor = "#fff";
             this.foregroundSelectedColor = "#000";
-            this.hyperlinkColor = "#000";
         }
     }
 
@@ -54,11 +51,11 @@ export class ColorManager {
         return this.foregroundSelectedColor;
     }
 
-    public getHyperlinkColor(): string {
-        return this.hyperlinkColor;
-    }
 
     public getColorForValue(value: string, legendColumn: powerbi.DataViewCategoricalColumn | powerbi.DataViewValueColumn | undefined): string {
+        console.log('value:', value)
+        console.log('legendColumn:', legendColumn)
+
         if (this.isHighContrast) {
             return this.foregroundColor;
         }

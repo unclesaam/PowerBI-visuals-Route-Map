@@ -2,7 +2,6 @@
 
 import {formattingSettings} from "powerbi-visuals-utils-formattingmodel";
 
-
 /**
  * Legend Settings Card
  */
@@ -83,6 +82,9 @@ export class RouteSettingsCard extends formattingSettings.Card {
     }
 }
 
+/**
+ *  Bubble Settings Card
+ */
 export class BubbleSettingsCard extends formattingSettings.Card {
     name: string = "bubbleSettings";
     displayName: string = "Bubbles";

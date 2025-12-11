@@ -99,7 +99,7 @@ export class Visual implements IVisual {
         try {
             if (!options || !options.dataViews || !options.dataViews[0]) return;
             this.dataView = options.dataViews[0];
-            console.log(this.dataView);
+            //console.log(this.dataView);
             this.formattingSettings = this.formattingSettingsService.populateFormattingSettingsModel(VisualFormattingSettingsModel, options.dataViews);
             const categorical = this.dataView.categorical;
             this.width = options.viewport.width;
