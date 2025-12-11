@@ -844,7 +844,12 @@ export class Visual implements IVisual {
                 });
             } else {
                 // Show default color option when no legend column is assigned
-                const currentDefaultColor = this.formattingSettings.dataPointCardSettings.defaultColor.value.value ||
+                const metadata = this.dataView?.metadata;
+                const objects = metadata?.objects;
+                const persistedColor = objects?.dataPoint?.defaultColor as powerbi.Fill;
+
+                const currentDefaultColor = persistedColor?.solid?.color ||
+                    this.formattingSettings.dataPointCardSettings.defaultColor.value.value ||
                     this.formattingSettings.routeSettingsCard.lineColor.value.value;
                 instances.push({
                     displayName: "Default color",
@@ -858,11 +863,15 @@ export class Visual implements IVisual {
         }
 
         if (options.objectName === 'routeSettings') {
+            const metadata = this.dataView?.metadata;
+            const objects = metadata?.objects;
+            const persistedLineColor = objects?.routeSettings?.lineColor as powerbi.Fill;
+
             instances.push({
                 objectName: 'routeSettings',
                 properties: {
                     lineWidth: this.formattingSettings.routeSettingsCard.lineWidth.value,
-                    lineColor: this.formattingSettings.routeSettingsCard.lineColor.value,
+                    lineColor: persistedLineColor || this.formattingSettings.routeSettingsCard.lineColor.value,
                     bubbleSize: this.formattingSettings.routeSettingsCard.bubbleSize.value,
                     useStraightLines: this.formattingSettings.routeSettingsCard.useStraightLines.value
                 },
