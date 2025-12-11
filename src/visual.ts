@@ -3,75 +3,48 @@ import powerbi from "powerbi-visuals-api";
 import {FormattingSettingsService} from "powerbi-visuals-utils-formattingmodel";
 import "./../style/visual.less";
 import {VisualFormattingSettingsModel} from "./settings";
-import * as L from "leaflet";
-import * as d3 from "d3";
-import {legend, legendInterfaces} from "powerbi-visuals-utils-chartutils";
+import {legendInterfaces} from "powerbi-visuals-utils-chartutils";
 import {createTooltipServiceWrapper, ITooltipServiceWrapper} from "powerbi-visuals-utils-tooltiputils";
+import {RouteData} from "./types";
+import {DataParser} from "./dataParser";
+import {ColorManager} from "./colorManager";
+import {MapManager} from "./mapManager";
+import {LegendManager} from "./legendManager";
+import {RouteRenderer} from "./routeRenderer";
+import {SelectionHandler} from "./selectionHandler";
 import VisualConstructorOptions = powerbi.extensibility.visual.VisualConstructorOptions;
 import VisualUpdateOptions = powerbi.extensibility.visual.VisualUpdateOptions;
 import IVisual = powerbi.extensibility.visual.IVisual;
 import DataView = powerbi.DataView;
-import ISelectionId = powerbi.visuals.ISelectionId;
-import IColorPalette = powerbi.extensibility.IColorPalette;
 import VisualObjectInstance = powerbi.VisualObjectInstance;
 import IVisualHost = powerbi.extensibility.visual.IVisualHost;
 import EnumerateVisualObjectInstancesOptions = powerbi.EnumerateVisualObjectInstancesOptions;
 import IVisualEventService = powerbi.extensibility.IVisualEventService;
 
-interface RouteData {
-    origin: string;
-    originLat: number;
-    originLng: number;
-    destination: string;
-    destLat: number;
-    destLng: number;
-    lineWidth: number;
-    legendValue: string;
-    selectionId?: ISelectionId;
-}
-
 export class Visual implements IVisual {
     private target: HTMLElement;
     private mapContainer: HTMLElement;
-    private map: L.Map;
-    private tileLayer: L.TileLayer;
     private width: number = 0;
     private height: number = 0;
     private formattingSettings: VisualFormattingSettingsModel;
     private formattingSettingsService: FormattingSettingsService;
-    private routeGroup: L.LayerGroup;
-    private legend: legendInterfaces.ILegend;
     private host: IVisualHost;
     private dataView: DataView;
-    private colorPalette: IColorPalette;
-    private selectionManager: powerbi.extensibility.ISelectionManager;
-    private selectedIds: powerbi.extensibility.ISelectionId[] = [];
     private eventService: IVisualEventService;
     private tooltipServiceWrapper: ITooltipServiceWrapper;
-    private isHighContrast: boolean = false;
-    private foregroundColor: string = "#000";
-    private backgroundColor: string = "#fff";
-    private foregroundSelectedColor: string = "#000";
-    private hyperlinkColor: string = "#000";
-    private contextMenuShown: boolean = false;
-    private colorCache: Map<string, string> = new Map();
+    private mapManager: MapManager;
+    private colorManager: ColorManager;
+    private legendManager: LegendManager;
+    private routeRenderer: RouteRenderer;
+    private selectionHandler: SelectionHandler;
+    private dataParser: DataParser;
 
     constructor(options: VisualConstructorOptions) {
         this.target = options.element;
         this.formattingSettingsService = new FormattingSettingsService();
         this.host = options.host;
-        this.colorPalette = options.host.colorPalette;
-        this.selectionManager = options.host.createSelectionManager();
         this.eventService = options.host.eventService;
         this.tooltipServiceWrapper = createTooltipServiceWrapper(this.host.tooltipService, this.target);
-
-        this.isHighContrast = this.host.colorPalette.isHighContrast;
-        if (this.isHighContrast) {
-            this.foregroundColor = this.host.colorPalette.foreground.value;
-            this.backgroundColor = this.host.colorPalette.background.value;
-            this.foregroundSelectedColor = this.host.colorPalette.foregroundSelected.value;
-            this.hyperlinkColor = this.host.colorPalette.hyperlink.value;
-        }
 
         const wrapper = document.createElement("div");
         wrapper.style.display = "flex";
@@ -88,67 +61,23 @@ export class Visual implements IVisual {
         this.mapContainer.className = "route-map";
         wrapper.appendChild(this.mapContainer);
 
-        this.legend = legend.createLegend(legendContainer, true);
-        this.initializeMap();
+        this.mapManager = new MapManager(this.mapContainer);
+        this.selectionHandler = new SelectionHandler(options.host.createSelectionManager());
+
         this.handleContextMenu();
     }
 
-    private initializeMap(): void {
-        this.map = L.map(this.mapContainer, {
-            zoomControl: true,
-            attributionControl: true
-        }).setView([0, 0], 2);
-
-        this.tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors',
-            maxZoom: 18
-        }).addTo(this.map);
-
-        this.routeGroup = L.layerGroup().addTo(this.map);
-    }
-
     private handleContextMenu(): void {
-        this.map.on('contextmenu', (event: L.LeafletMouseEvent) => {
-            if (!this.contextMenuShown && (!event.originalEvent.target ||
+        this.mapManager.getMap().on('contextmenu', (event: any) => {
+            if (!this.selectionHandler.getContextMenuShown() && (!event.originalEvent.target ||
                 !(event.originalEvent.target as Element).closest('.leaflet-interactive'))) {
-                this.contextMenuShown = true;
-                this.selectionManager.showContextMenu({}, {
+                this.selectionHandler.showContextMenu({}, {
                     x: event.originalEvent.clientX,
                     y: event.originalEvent.clientY
-                }).finally(() => {
-                    this.contextMenuShown = false;
                 });
             }
             event.originalEvent.preventDefault();
         });
-    }
-
-    private isValidLatitude(lat: number): boolean {
-        return !isNaN(lat) && lat >= -90 && lat <= 90;
-    }
-
-    private isValidLongitude(lng: number): boolean {
-        return !isNaN(lng) && lng >= -180 && lng <= 180;
-    }
-
-    private isValidRouteData(route: RouteData): boolean {
-        return this.isValidLatitude(route.originLat) &&
-            this.isValidLatitude(route.destLat) &&
-            this.isValidLongitude(route.originLng) &&
-            this.isValidLongitude(route.destLng);
-    }
-
-    private getColumnByRole(
-        categorical: powerbi.DataViewCategorical,
-        roleName: string
-    ): powerbi.DataViewCategoricalColumn | powerbi.DataViewValueColumn | undefined {
-        const category = categorical.categories?.find(cat => cat.source.roles?.[roleName]);
-        if (category) return category;
-
-        const value = categorical.values?.find(val => val.source.roles?.[roleName]);
-        if (value) return value;
-
-        return undefined;
     }
 
     public update(options: VisualUpdateOptions) {
@@ -166,41 +95,37 @@ export class Visual implements IVisual {
             this.height = options.viewport.height;
             this.target.style.width = `${this.width}px`;
             this.target.style.height = `${this.height}px`;
-            this.map.invalidateSize();
+            this.mapManager.invalidateSize();
 
-            const originColumn = this.getColumnByRole(categorical, "origin");
-            const originLatColumn = this.getColumnByRole(categorical, "originLat");
-            const originLngColumn = this.getColumnByRole(categorical, "originLng");
-            const destinationColumn = this.getColumnByRole(categorical, "destination");
-            const destLatColumn = this.getColumnByRole(categorical, "destLat");
-            const destLngColumn = this.getColumnByRole(categorical, "destLng");
-            const legendColumn = this.getColumnByRole(categorical, "legend");
-            const lineWidthColumn = this.getColumnByRole(categorical, "lineWidth");
+            this.dataParser = new DataParser(this.host, this.dataView);
+            this.colorManager = new ColorManager(this.host.colorPalette, this.dataView, this.formattingSettings);
 
-            const tooltipFields = [
-                ...(categorical.values?.filter(v => v.source.roles?.tooltips) || []),
-                ...(categorical.categories?.filter(c => c.source.roles?.tooltips) || [])
-            ];
+            const legendContainer = this.target.querySelector('.legend-container') as HTMLElement;
+            this.legendManager = new LegendManager(
+                legendContainer,
+                this.target,
+                this.host,
+                this.dataView,
+                this.formattingSettings,
+                this.colorManager,
+                this.selectionHandler.getSelectedIds(),
+                this.host.createSelectionManager(),
+                () => this.mapManager.invalidateSize()
+            );
 
-            const originValues = originColumn && "values" in originColumn ? originColumn.values : [];
-            const originLatValues = originLatColumn && "values" in originLatColumn ? originLatColumn.values : [];
-            const originLngValues = originLngColumn && "values" in originLngColumn ? originLngColumn.values : [];
-            const destinationValues = destinationColumn && "values" in destinationColumn ? destinationColumn.values : [];
-            const destLatValues = destLatColumn && "values" in destLatColumn ? destLatColumn.values : [];
-            const destLngValues = destLngColumn && "values" in destLngColumn ? destLngColumn.values : [];
-            const legendValues = legendColumn && "values" in legendColumn ? legendColumn.values : [];
-            const lineWidthValues = lineWidthColumn && "values" in lineWidthColumn ? lineWidthColumn.values : [];
+            this.routeRenderer = new RouteRenderer(
+                this.mapManager,
+                this.colorManager,
+                this.selectionHandler,
+                this.tooltipServiceWrapper,
+                this.host,
+                this.dataView,
+                this.formattingSettings
+            );
 
-            const data: RouteData[] = originLatValues.map((_, index) => ({
-                origin: originValues[index]?.toString() || '',
-                destination: destinationValues[index]?.toString() || '',
-                originLat: parseFloat(originLatValues[index] as any),
-                originLng: parseFloat(originLngValues[index] as any),
-                destLat: parseFloat(destLatValues[index] as any),
-                destLng: parseFloat(destLngValues[index] as any),
-                lineWidth: lineWidthValues ? parseFloat(lineWidthValues[index] as any) : NaN,
-                legendValue: legendValues[index]?.toString() || ''
-            })).filter(route => this.isValidRouteData(route));
+            const tooltipFields = this.dataParser.getTooltipFields(categorical);
+
+            const data: RouteData[] = this.dataParser.parseRouteData(categorical);
 
             const showLegend = this.formattingSettings.legendSettings.show.value;
             const legendPositionValue = this.formattingSettings.legendSettings.position.value.value;
@@ -213,26 +138,18 @@ export class Visual implements IVisual {
                 `--legend-font-size: ${legendFontSize}px;`
             );
 
-            const selectionIds = legendValues.map((value, index) => {
-                if (legendColumn) {
-                    return this.host.createSelectionIdBuilder()
-                        .withCategory(legendColumn as powerbi.DataViewCategoryColumn, index)
-                        .createSelectionId();
-                } else {
-                    // If no legend column, create selection ID based on the row index
-                    return this.host.createSelectionIdBuilder()
-                        .withTable(this.dataView.table, index)
-                        .createSelectionId();
-                }
-            });
+            const selectionIds = this.dataParser.createSelectionIds(categorical);
 
             data.forEach((route, i) => {
                 route.selectionId = selectionIds[i];
             });
 
+            const legendColumn = this.dataParser.getColumnByRole(categorical, "legend");
+            const legendValues = legendColumn && "values" in legendColumn ? legendColumn.values : [];
             const shouldShowLegend = showLegend && !!legendColumn && legendValues.length > 0;
-            this.updateLegend(data, options.viewport, shouldShowLegend, legendPositionKey, defaultColor);
-            this.drawRoutes(data, options.viewport, tooltipFields, categorical);
+
+            this.legendManager.updateLegend(data, options.viewport, shouldShowLegend, legendPositionKey, defaultColor, legendColumn);
+            this.routeRenderer.drawRoutes(data, options.viewport, tooltipFields, categorical, legendColumn);
 
         } catch (e) {
             console.error("Rendering error:", e);
@@ -244,571 +161,6 @@ export class Visual implements IVisual {
         if (this.eventService?.renderingFinished) {
             this.eventService.renderingFinished(options);
         }
-    }
-
-    private updateLegend(
-        data: RouteData[],
-        viewport: powerbi.IViewport,
-        show: boolean,
-        position: legendInterfaces.LegendPosition,
-        defaultColor: string
-    ): void {
-        const legendContainer = this.target.querySelector('.legend-container') as HTMLElement;
-
-        const legendColumn = this.getColumnByRole(this.dataView.categorical, "legend");
-        const legendDisplayName = legendColumn?.source?.displayName ?? "Legend";
-
-        const customTitle = this.formattingSettings.legendSettings.titleText.value;
-        const showTitle = this.formattingSettings.legendSettings.showTitle.value;
-
-        const legendTitle = showTitle
-            ? (customTitle?.trim() || legendDisplayName)
-            : "";
-
-        // Only create legend data if there's actually a legend column with values
-        const uniqueValues = legendColumn
-            ? [...new Set(data.map(route => route.legendValue))].sort()
-            : [];
-
-        const legendData: legendInterfaces.LegendData = {
-            title: legendTitle,
-            dataPoints: uniqueValues.map((value) => {
-                let color = this.isHighContrast ? this.foregroundColor : this.getColorForValue(value) ?? defaultColor;
-
-                // Find the original index of this value in the legend column
-                const legendColumn = this.getColumnByRole(this.dataView.categorical, "legend");
-                const originalIndex = legendColumn && "values" in legendColumn
-                    ? legendColumn.values.findIndex(v => (v?.toString() || "") === value)
-                    : -1;
-
-                if (this.isHighContrast && this.selectedIds.some(id =>
-                    (id as any).getKey?.() === (this.host.createSelectionIdBuilder()
-                        .withCategory(legendColumn as powerbi.DataViewCategoryColumn, originalIndex)
-                        .createSelectionId() as any).getKey?.()
-                )) {
-                    color = this.foregroundSelectedColor;
-                }
-
-                const selectionId: ISelectionId = legendColumn && originalIndex >= 0
-                    ? this.host.createSelectionIdBuilder()
-                        .withCategory(legendColumn as powerbi.DataViewCategoryColumn, originalIndex)
-                        .createSelectionId()
-                    : this.host.createSelectionIdBuilder()
-                        .withTable(this.dataView.table, originalIndex)
-                        .createSelectionId();
-
-                return {
-                    label: value || "(Blank)",
-                    color,
-                    identity: selectionId,
-                    selected: false
-                };
-            })
-        };
-
-        const legendPositionKey = position as unknown as keyof typeof legendInterfaces.LegendPosition;
-        const legendEnumValue = legendInterfaces.LegendPosition[legendPositionKey];
-
-
-        this.legend.changeOrientation(position as legendInterfaces.LegendPosition);
-
-
-        const mapContainer = this.target.querySelector('.route-map') as HTMLElement;
-        const wrapper = this.target.querySelector("div") as HTMLElement;
-
-        if (!show) {
-            legendContainer.style.display = 'none';
-            mapContainer.style.marginLeft = '0';
-            this.legend.drawLegend({dataPoints: []}, viewport);
-            return;
-        }
-
-        legendContainer.style.display = 'block';
-        legendContainer.style.marginLeft = "0";
-        legendContainer.style.marginTop = "0";
-        mapContainer.style.marginLeft = "0";
-        mapContainer.style.marginTop = "0";
-
-        if (position === legendInterfaces.LegendPosition.Left) {
-            wrapper.style.flexDirection = "row";
-            legendContainer.style.order = "0";
-            mapContainer.style.order = "1";
-            legendContainer.style.minWidth = "150px";
-            legendContainer.style.height = "100%";
-            mapContainer.style.width = "auto";
-            mapContainer.style.height = "100%";
-        } else if (position === legendInterfaces.LegendPosition.Right) {
-            wrapper.style.flexDirection = "row";
-            legendContainer.style.order = "1";
-            mapContainer.style.order = "0";
-            legendContainer.style.minWidth = "150px";
-            legendContainer.style.height = "100%";
-            mapContainer.style.width = "auto";
-            mapContainer.style.height = "100%";
-        } else if (position === legendInterfaces.LegendPosition.Top) {
-            wrapper.style.flexDirection = "column";
-            legendContainer.style.order = "0";
-            mapContainer.style.order = "1";
-            legendContainer.style.width = "100%";
-            legendContainer.style.minHeight = "50px";
-            mapContainer.style.width = "100%";
-            mapContainer.style.height = "auto";
-        } else if (position === legendInterfaces.LegendPosition.Bottom) {
-            wrapper.style.flexDirection = "column";
-            legendContainer.style.order = "1";
-            mapContainer.style.order = "0";
-            legendContainer.style.width = "100%";
-            legendContainer.style.minHeight = "50px";
-            mapContainer.style.width = "100%";
-            mapContainer.style.height = "auto";
-        }
-
-
-        requestAnimationFrame(() => {
-            setTimeout(() => {
-                this.map.invalidateSize();
-            }, 50);
-        });
-
-        this.legend.drawLegend(legendData, viewport);
-        this.legend.drawLegend(legendData, viewport);
-        this.map.invalidateSize();
-
-        this.setupLegendContextMenu();
-    }
-
-    private setupLegendContextMenu(): void {
-        const legendContainer = this.target.querySelector('.legend-container') as HTMLElement;
-        if (legendContainer) {
-            legendContainer.removeEventListener('contextmenu', this.handleLegendContextMenu);
-            legendContainer.addEventListener('contextmenu', this.handleLegendContextMenu);
-        }
-    }
-
-    private handleLegendContextMenu = (event: MouseEvent): void => {
-        if (!this.contextMenuShown && (!event.target ||
-            !(event.target as Element).closest('.legendItem'))) {
-            this.contextMenuShown = true;
-            this.selectionManager.showContextMenu({}, {
-                x: event.clientX,
-                y: event.clientY
-            }).finally(() => {
-                this.contextMenuShown = false;
-            });
-        }
-        event.preventDefault();
-    }
-
-
-    private getColorForValue(value: string): string {
-        if (this.isHighContrast) {
-            return this.foregroundColor;
-        }
-
-        // Only use legend-based coloring if a legend column is specifically assigned
-        const legendColumn = this.getColumnByRole(this.dataView.categorical, "legend");
-        if (!legendColumn) {
-            // No legend column assigned, use default color from data point settings if set, otherwise route settings
-            return this.formattingSettings.routeSettingsCard.lineColor.value.value;
-        }
-
-        const index = ("values" in legendColumn) ? legendColumn.values.findIndex(v => v?.toString() === value) : -1;
-        const object = ("objects" in legendColumn) ? legendColumn.objects?.[index] : undefined;
-        const colorObj = object?.dataPoint?.fill as powerbi.Fill;
-        const userColor = colorObj?.solid?.color;
-
-        if (userColor) {
-            return userColor;
-        }
-
-        // Use color cache to ensure consistent colors across filtering
-        if (!this.colorCache.has(value)) {
-            this.colorCache.set(value, this.colorPalette.getColor(value).value);
-        }
-        return this.colorCache.get(value);
-    }
-
-    private drawRoutes(
-        data: RouteData[],
-        viewport: powerbi.IViewport,
-        tooltipFields: (powerbi.DataViewValueColumn | powerbi.DataViewCategoryColumn)[],
-        categorical: powerbi.DataViewCategorical
-    ): void {
-        if (!this.map || !data.length) return;
-
-        this.routeGroup.clearLayers();
-
-        const lineWidthSetting = this.formattingSettings.routeSettingsCard.lineWidth.value;
-        const bubbleSizeSetting = this.formattingSettings.routeSettingsCard.bubbleSize.value;
-
-        const validWidths = data.map(d => d.lineWidth).filter(v => !isNaN(v));
-        const hasValidWidths = validWidths.length > 0;
-        const minWidth = lineWidthSetting;
-        const maxWidth = lineWidthSetting * 3;
-        const minValue = hasValidWidths ? Math.min(...validWidths) : 0;
-        const maxValue = hasValidWidths ? Math.max(...validWidths) : 1;
-
-        const bounds = L.latLngBounds([]);
-
-        const valueColumns = categorical?.values || [];
-
-        const highlightedColumn = valueColumns.find(col =>
-            col.highlights && col.highlights.some(h => h !== null)
-        );
-        const hasHighlights = !!highlightedColumn;
-
-        const originCounts: Record<string, number> = {};
-        const destCounts: Record<string, number> = {};
-
-
-        const originMarkers: Record<string, RouteData[]> = {};
-        const destMarkers: Record<string, RouteData[]> = {};
-
-        data.forEach((route, index) => {
-            const originKey = `${route.originLat},${route.originLng}`;
-            const destKey = `${route.destLat},${route.destLng}`;
-
-            originCounts[originKey] = (originCounts[originKey] || 0) + 1;
-            destCounts[destKey] = (destCounts[destKey] || 0) + 1;
-
-            originMarkers[originKey] = originMarkers[originKey] || [];
-            destMarkers[destKey] = destMarkers[destKey] || [];
-
-            originMarkers[originKey].push(route);
-            destMarkers[destKey].push(route);
-        });
-
-        const getRadius = (count: number, max: number) => {
-            const minR = bubbleSizeSetting;
-            const maxR = bubbleSizeSetting * 2.5;
-            const scale = Math.sqrt(count / max);
-            return minR + scale * (maxR - minR);
-        };
-
-        const maxOrigin = Math.max(...Object.values(originCounts));
-        const maxDest = Math.max(...Object.values(destCounts));
-
-        data.forEach((route, index) => {
-            const range = Math.max(maxValue - minValue, 1e-6);
-
-            const norm = (route.lineWidth - minValue) / range;
-
-            const width = hasValidWidths
-                ? minWidth + Math.pow(norm, 0.5) * (maxWidth - minWidth)
-                : lineWidthSetting;
-
-            const legendCol = this.getColumnByRole(this.dataView.categorical, "legend");
-
-            const routeColor = legendCol
-                ? this.getColorForValue(route.legendValue)
-                : this.formattingSettings.routeSettingsCard.lineColor.value.value;
-
-            const pathCoordinates: [number, number][] = this.getCurvedPathCoordinates(
-                [route.originLat, route.originLng],
-                [route.destLat, route.destLng]
-            );
-
-            const legendCol2 = this.getColumnByRole(this.dataView.categorical, "legend");
-            // Find the original index of this route's legend value in the legend column
-            const originalLegendIndex = legendCol2 && "values" in legendCol2
-                ? legendCol2.values.findIndex(v => (v?.toString() || "") === route.legendValue)
-                : -1;
-
-            const selectionId = legendCol2 && originalLegendIndex >= 0
-                ? this.host.createSelectionIdBuilder()
-                    .withCategory(legendCol2 as powerbi.DataViewCategoryColumn, originalLegendIndex)
-                    .createSelectionId()
-                : this.host.createSelectionIdBuilder()
-                    .withTable(this.dataView.table, index)
-                    .createSelectionId();
-            const isHighlighted = !hasHighlights || (highlightedColumn?.highlights?.[index] != null);
-
-
-            const isSelected =
-                !hasHighlights && (
-                    this.selectedIds.length === 0 ||
-                    this.selectedIds.some(id =>
-                        (id as any).getKey?.() === (selectionId as any).getKey?.()
-                    )
-                );
-
-            const opacity = (hasHighlights && !isHighlighted) || (!hasHighlights && !isSelected) ? 0.3 : 1;
-
-            const lineColor = this.isHighContrast
-                ? (isSelected ? this.foregroundSelectedColor : this.foregroundColor)
-                : routeColor;
-
-            const fillColor = this.isHighContrast
-                ? (isSelected ? this.foregroundSelectedColor : this.backgroundColor)
-                : routeColor;
-
-            const fillOpacity = this.isHighContrast ? 1 : opacity;
-
-            const polyline = L.polyline(pathCoordinates, {
-                color: lineColor,
-                weight: width,
-                opacity: opacity
-            }).addTo(this.routeGroup);
-
-            if (tooltipFields.length > 0) {
-                const polylineElement = polyline.getElement();
-                const d3PolylineSelection = d3.select(polylineElement);
-                this.tooltipServiceWrapper.addTooltip(
-                    d3PolylineSelection,
-                    () => tooltipFields.map(field => ({
-                        displayName: field.source.displayName,
-                        value: Array.isArray(field.values) ? field.values[index]?.toString() ?? "" : ""
-                    })),
-                    () => route.selectionId ? route.selectionId.getSelector() : null
-                );
-            } else {
-                const polylineElement = polyline.getElement();
-                const d3PolylineSelection = d3.select(polylineElement);
-                this.tooltipServiceWrapper.addTooltip(
-                    d3PolylineSelection,
-                    () => [{
-                        displayName: "Origin",
-                        value: route.origin || `${route.originLat}, ${route.originLng}`
-                    }, {
-                        displayName: "Destination",
-                        value: route.destination || `${route.destLat}, ${route.destLng}`
-                    }],
-                    () => route.selectionId ? route.selectionId.getSelector() : null
-                );
-            }
-
-            polyline.on("click", (e: any) => {
-                const multiSelect = e.originalEvent.ctrlKey || e.originalEvent.metaKey;
-                this.selectionManager.select(route.selectionId, multiSelect).then(ids => {
-                    this.selectedIds = ids;
-                    this.drawRoutes(data, viewport, tooltipFields, categorical);
-                });
-            });
-
-            polyline.on("contextmenu", (e: any) => {
-                if (!this.contextMenuShown) {
-                    this.contextMenuShown = true;
-                    this.selectionManager.showContextMenu(route.selectionId, {
-                        x: e.originalEvent.clientX,
-                        y: e.originalEvent.clientY
-                    }).finally(() => {
-                        this.contextMenuShown = false;
-                    });
-                }
-                e.originalEvent.preventDefault();
-                e.originalEvent.stopPropagation();
-            });
-
-            bounds.extend([route.originLat, route.originLng]);
-            bounds.extend([route.destLat, route.destLng]);
-
-            const originKey = `${route.originLat},${route.originLng}`;
-            const destKey = `${route.destLat},${route.destLng}`;
-
-            const originRadius = getRadius(originCounts[originKey], maxOrigin);
-            const destRadius = getRadius(destCounts[destKey], maxDest);
-
-            const originCircle = L.circleMarker([route.originLat, route.originLng], {
-                radius: originRadius,
-                color: lineColor,
-                fillColor: fillColor,
-                fillOpacity: fillOpacity,
-                weight: 2
-            }).addTo(this.routeGroup);
-
-            if (tooltipFields.length > 0) {
-                const originElement = originCircle.getElement();
-                const d3OriginSelection = d3.select(originElement);
-                this.tooltipServiceWrapper.addTooltip(
-                    d3OriginSelection,
-                    () => tooltipFields.map(field => ({
-                        displayName: field.source.displayName,
-                        value: "values" in field ? field.values[index]?.toString() ?? "" : ""
-                    })),
-                    () => route.selectionId ? route.selectionId.getSelector() : null
-                );
-            } else {
-                const originElement = originCircle.getElement();
-                const d3OriginSelection = d3.select(originElement);
-                this.tooltipServiceWrapper.addTooltip(
-                    d3OriginSelection,
-                    () => [{
-                        displayName: "Origin",
-                        value: route.origin || `${route.originLat}, ${route.originLng}`
-                    }],
-                    () => route.selectionId ? route.selectionId.getSelector() : null
-                );
-            }
-
-            originCircle.on("click", (e: any) => {
-                const lat = route.originLat;
-                const lng = route.originLng;
-
-                const matchingRoutes = data.filter(r =>
-                    r.originLat === lat && r.originLng === lng ||
-                    r.destLat === lat && r.destLng === lng
-                );
-
-                const selectionIds = matchingRoutes.map(r => r.selectionId).filter(id => !!id);
-
-                const allSelected = selectionIds.length > 0 && selectionIds.every(sel =>
-                    this.selectedIds.some(existing =>
-                        (existing as any).getKey?.() === (sel as any).getKey?.()
-                    )
-                );
-
-                if (allSelected) {
-                    this.selectionManager.clear().then(() => {
-                        this.selectedIds = [];
-                        this.drawRoutes(data, viewport, tooltipFields, categorical);
-                    });
-                } else {
-                    const multiSelect = e.originalEvent.ctrlKey || e.originalEvent.metaKey;
-                    this.selectionManager.select(selectionIds, multiSelect).then(ids => {
-                        this.selectedIds = ids;
-                        this.drawRoutes(data, viewport, tooltipFields, categorical);
-                    });
-                }
-            });
-
-            originCircle.on("contextmenu", (e: any) => {
-                if (!this.contextMenuShown) {
-                    const lat = route.originLat;
-                    const lng = route.originLng;
-
-                    const matchingRoutes = data.filter(r =>
-                        r.originLat === lat && r.originLng === lng ||
-                        r.destLat === lat && r.destLng === lng
-                    );
-
-                    const selectionIds = matchingRoutes.map(r => r.selectionId).filter(id => !!id);
-
-                    const contextMenuSelectionId = selectionIds.length > 0 ? selectionIds[0] : route.selectionId;
-
-                    this.contextMenuShown = true;
-                    this.selectionManager.showContextMenu(contextMenuSelectionId, {
-                        x: e.originalEvent.clientX,
-                        y: e.originalEvent.clientY
-                    }).finally(() => {
-                        this.contextMenuShown = false;
-                    });
-                }
-                e.originalEvent.preventDefault();
-                e.originalEvent.stopPropagation();
-            });
-
-
-            const destCircle = L.circleMarker([route.destLat, route.destLng], {
-                radius: destRadius,
-                color: lineColor,
-                fillColor: fillColor,
-                fillOpacity: fillOpacity,
-                weight: 2
-            }).addTo(this.routeGroup);
-
-            if (tooltipFields.length > 0) {
-                const destElement = destCircle.getElement();
-                const d3DestSelection = d3.select(destElement);
-                this.tooltipServiceWrapper.addTooltip(
-                    d3DestSelection,
-                    () => tooltipFields.map(field => ({
-                        displayName: field.source.displayName,
-                        value: field.values[index]?.toString() ?? ""
-                    })),
-                    () => route.selectionId ? route.selectionId.getSelector() : null
-                );
-            } else {
-                const destElement = destCircle.getElement();
-                const d3DestSelection = d3.select(destElement);
-                this.tooltipServiceWrapper.addTooltip(
-                    d3DestSelection,
-                    () => [{
-                        displayName: "Destination",
-                        value: route.destination || `${route.destLat}, ${route.destLng}`
-                    }],
-                    () => route.selectionId ? route.selectionId.getSelector() : null
-                );
-            }
-
-            destCircle.on("click", (e: any) => {
-                const lat = route.destLat;
-                const lng = route.destLng;
-                const matchingRoutes = data.filter(r =>
-                    r.originLat === lat && r.originLng === lng ||
-                    r.destLat === lat && r.destLng === lng
-                );
-
-                const selectionIds = matchingRoutes.map(r => r.selectionId).filter(id => !!id);
-
-                const allSelected = selectionIds.length > 0 && selectionIds.every(sel =>
-                    this.selectedIds.some(existing =>
-                        (existing as any).getKey?.() === (sel as any).getKey?.()
-                    )
-                );
-
-                if (allSelected) {
-                    this.selectionManager.clear().then(() => {
-                        this.selectedIds = [];
-                        this.drawRoutes(data, viewport, tooltipFields, categorical);
-                    });
-                } else {
-                    const multiSelect = e.originalEvent.ctrlKey || e.originalEvent.metaKey;
-                    this.selectionManager.select(selectionIds, multiSelect).then(ids => {
-                        this.selectedIds = ids;
-                        this.drawRoutes(data, viewport, tooltipFields, categorical);
-                    });
-                }
-            });
-
-            destCircle.on("contextmenu", (e: any) => {
-                if (!this.contextMenuShown) {
-                    const lat = route.destLat;
-                    const lng = route.destLng;
-                    const matchingRoutes = data.filter(r =>
-                        r.originLat === lat && r.originLng === lng ||
-                        r.destLat === lat && r.destLng === lng
-                    );
-
-                    const selectionIds = matchingRoutes.map(r => r.selectionId).filter(id => !!id);
-
-                    const contextMenuSelectionId = selectionIds.length > 0 ? selectionIds[0] : route.selectionId;
-
-                    this.contextMenuShown = true;
-                    this.selectionManager.showContextMenu(contextMenuSelectionId, {
-                        x: e.originalEvent.clientX,
-                        y: e.originalEvent.clientY
-                    }).finally(() => {
-                        this.contextMenuShown = false;
-                    });
-                }
-                e.originalEvent.preventDefault();
-                e.originalEvent.stopPropagation();
-            });
-        });
-
-        if (bounds.isValid()) {
-            this.map.fitBounds(bounds);
-        }
-    }
-
-
-    private getCurvedPathCoordinates(start: [number, number], end: [number, number]): [number, number][] {
-        const latlngs: [number, number][] = [];
-        const steps = 100;
-
-        for (let i = 0; i <= steps; i++) {
-            const t = i / steps;
-            const midPoint: [number, number] = [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2];
-            const dist = Math.sqrt(Math.pow(end[0] - start[0], 2) + Math.pow(end[1] - start[1], 2));
-            const elevation = dist * 0.15;
-            const controlPoint: [number, number] = [midPoint[0] + elevation, midPoint[1]];
-
-            const lat = (1 - t) ** 2 * start[0] + 2 * (1 - t) * t * controlPoint[0] + t ** 2 * end[0];
-            const lng = (1 - t) ** 2 * start[1] + 2 * (1 - t) * t * controlPoint[1] + t ** 2 * end[1];
-            latlngs.push([lat, lng]);
-        }
-
-        return latlngs;
     }
 
     public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstance[] {
@@ -847,3 +199,4 @@ export class Visual implements IVisual {
         return instances;
     }
 }
+
