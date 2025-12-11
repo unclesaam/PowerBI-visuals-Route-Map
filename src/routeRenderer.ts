@@ -49,7 +49,7 @@ export class RouteRenderer {
         this.mapManager.clearRoutes();
 
         const lineWidthSetting = this.formattingSettings.routeSettingsCard.lineWidth.value;
-        const bubbleSizeSetting = this.formattingSettings.routeSettingsCard.bubbleSize.value;
+        const bubbleSizeSetting = this.formattingSettings.bubbleSettingsCard.bubbleSize.value;
 
         const validWidths = data.map(d => d.lineWidth).filter(v => !isNaN(v));
         const hasValidWidths = validWidths.length > 0;

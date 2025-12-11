@@ -111,7 +111,12 @@
               }
             }
           }
-        },
+        }
+      }
+    },
+    "bubbleSettings": {
+      "displayName": "Bubbles Settings",
+      "properties": {
         "bubbleSize": {
           "displayName": "Bubble Size",
           "type": {

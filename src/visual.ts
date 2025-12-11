@@ -16,9 +16,7 @@ import VisualConstructorOptions = powerbi.extensibility.visual.VisualConstructor
 import VisualUpdateOptions = powerbi.extensibility.visual.VisualUpdateOptions;
 import IVisual = powerbi.extensibility.visual.IVisual;
 import DataView = powerbi.DataView;
-import VisualObjectInstance = powerbi.VisualObjectInstance;
 import IVisualHost = powerbi.extensibility.visual.IVisualHost;
-import EnumerateVisualObjectInstancesOptions = powerbi.EnumerateVisualObjectInstancesOptions;
 import IVisualEventService = powerbi.extensibility.IVisualEventService;
 
 export class Visual implements IVisual {
@@ -171,40 +169,43 @@ export class Visual implements IVisual {
         }
     }
 
-    public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstance[] {
-        const instances: VisualObjectInstance[] = [];
-
-        if (options.objectName === 'routeSettings') {
-            const metadata = this.dataView?.metadata;
-            const objects = metadata?.objects;
-            const persistedLineColor = objects?.routeSettings?.lineColor as powerbi.Fill;
-
-            instances.push({
-                objectName: 'routeSettings',
-                properties: {
-                    lineWidth: this.formattingSettings.routeSettingsCard.lineWidth.value,
-                    lineColor: persistedLineColor || this.formattingSettings.routeSettingsCard.lineColor.value,
-                    bubbleSize: this.formattingSettings.routeSettingsCard.bubbleSize.value,
-                },
-                selector: null,
-            });
-        }
-
-        if (options.objectName === 'legend') {
-            instances.push({
-                objectName: 'legend',
-                properties: {
-                    show: this.formattingSettings.legendSettings.show.value,
-                    position: this.formattingSettings.legendSettings.position.value.value,
-                    fontSize: this.formattingSettings.legendSettings.fontSize.value,
-                    showTitle: this.formattingSettings.legendSettings.showTitle.value,
-                    titleText: this.formattingSettings.legendSettings.titleText.value
-                },
-                selector: null
-            });
-        }
-
-        return instances;
+    // public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstance[] {
+    //     const instances: VisualObjectInstance[] = [];
+    //
+    //     if (options.objectName === 'routeSettings') {
+    //         const metadata = this.dataView?.metadata;
+    //         const objects = metadata?.objects;
+    //         const persistedLineColor = objects?.routeSettings?.lineColor as powerbi.Fill;
+    //
+    //         instances.push({
+    //             objectName: 'routeSettings',
+    //             properties: {
+    //                 lineWidth: this.formattingSettings.routeSettingsCard.lineWidth.value,
+    //                 lineColor: persistedLineColor || this.formattingSettings.routeSettingsCard.lineColor.value,
+    //                 bubbleSize: this.formattingSettings.routeSettingsCard.bubbleSize.value,
+    //             },
+    //             selector: null,
+    //         });
+    //     }
+    //
+    //     if (options.objectName === 'legend') {
+    //         instances.push({
+    //             objectName: 'legend',
+    //             properties: {
+    //                 show: this.formattingSettings.legendSettings.show.value,
+    //                 position: this.formattingSettings.legendSettings.position.value.value,
+    //                 fontSize: this.formattingSettings.legendSettings.fontSize.value,
+    //                 showTitle: this.formattingSettings.legendSettings.showTitle.value,
+    //                 titleText: this.formattingSettings.legendSettings.titleText.value
+    //             },
+    //             selector: null
+    //         });
+    //     }
+    //
+    //     return instances;
+    // }
+    public getFormattingModel(): powerbi.visuals.FormattingModel {
+        return this.formattingSettingsService.buildFormattingModel(this.formattingSettings);
     }
 }
 

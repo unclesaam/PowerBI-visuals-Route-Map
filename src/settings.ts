@@ -60,7 +60,7 @@ export class LegendSettings extends formattingSettings.Card {
  */
 export class RouteSettingsCard extends formattingSettings.Card {
     name: string = "routeSettings";
-    displayName: string = "Route Settings";
+    displayName: string = "Routes";
     slices: Array<formattingSettings.Slice> = [];
 
     lineWidth = new formattingSettings.NumUpDown({
@@ -75,6 +75,18 @@ export class RouteSettingsCard extends formattingSettings.Card {
         value: {value: "#007ACC"}
     });
 
+    constructor() {
+        super();
+        this.slices.push(this.lineWidth);
+        this.slices.push(this.lineColor);
+    }
+}
+
+export class BubbleSettingsCard extends formattingSettings.Card {
+    name: string = "bubbleSettings";
+    displayName: string = "Bubbles";
+    slices: Array<formattingSettings.Slice> = [];
+
     bubbleSize = new formattingSettings.NumUpDown({
         name: "bubbleSize",
         displayName: "Bubble Size",
@@ -83,8 +95,6 @@ export class RouteSettingsCard extends formattingSettings.Card {
 
     constructor() {
         super();
-        this.slices.push(this.lineWidth);
-        this.slices.push(this.lineColor);
         this.slices.push(this.bubbleSize);
     }
 }
@@ -95,9 +105,11 @@ export class RouteSettingsCard extends formattingSettings.Card {
 export class VisualFormattingSettingsModel extends formattingSettings.Model {
     legendSettings = new LegendSettings();
     routeSettingsCard = new RouteSettingsCard();
+    bubbleSettingsCard = new BubbleSettingsCard();
 
     cards: formattingSettings.Card[] = [
         this.routeSettingsCard,
+        this.bubbleSettingsCard,
         this.legendSettings,
     ];
 }
