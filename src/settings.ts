@@ -72,7 +72,8 @@ export class RouteSettingsCard extends formattingSettings.Card {
     lineColor = new formattingSettings.ColorPicker({
         name: "lineColor",
         displayName: "Line Color",
-        value: {value: "#007ACC"}
+        value: {value: "#007ACC"},
+        instanceKind: powerbi.VisualEnumerationInstanceKinds.ConstantOrRule,
     });
 
     constructor() {
