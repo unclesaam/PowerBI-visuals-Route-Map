@@ -82,7 +82,7 @@ export class Visual implements IVisual {
             this.mapManager.invalidateSize();
 
             this.dataParser = new DataParser(this.host, this.dataView);
-            const colorManager = new ColorManager(this.host.colorPalette, this.formattingSettings);
+            const colorManager = new ColorManager(this.formattingSettings);
 
             const data = this.dataParser.parseRouteData(categorical);
             const selectionIds = this.dataParser.createSelectionIds(data.length);

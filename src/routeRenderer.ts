@@ -126,15 +126,9 @@ export class RouteRenderer {
 
             const opacity = (hasHighlights && !isHighlighted) || (!hasHighlights && !isSelected) ? 0.3 : 1;
 
-            const lineColor = this.colorManager.getIsHighContrast()
-                ? (isSelected ? this.colorManager.getForegroundSelectedColor() : this.colorManager.getForegroundColor())
-                : routeColor;
-
-            const fillColor = this.colorManager.getIsHighContrast()
-                ? (isSelected ? this.colorManager.getForegroundSelectedColor() : this.colorManager.getBackgroundColor())
-                : routeColor;
-
-            const fillOpacity = this.colorManager.getIsHighContrast() ? 1 : opacity;
+            const lineColor = routeColor;
+            const fillColor = routeColor;
+            const fillOpacity = opacity;
 
             const polyline = L.polyline(pathCoordinates, {
                 color: lineColor,
