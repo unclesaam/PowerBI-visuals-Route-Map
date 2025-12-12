@@ -1,7 +1,27 @@
 {
-  "name": "route-Map",
-  "description": "A Power BI custom visual for displaying routes between locations",
+  "name": "powerbi-route-map",
+  "displayName": "Route Map",
+  "description": "Interactive Power BI custom visual for visualizing origin-destination routes on a map with conditional formatting support",
   "version": "1.0.0",
+  "author": {
+    "name": "Samuel Cloutier",
+    "email": "samuel.cloutier.5@ulaval.ca"
+  },
+  "keywords": [
+    "powerbi",
+    "custom-visual",
+    "map",
+    "routes",
+    "logistics",
+    "leaflet",
+    "geography",
+    "origin-destination"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/unclesaam/PowerBI-visuals-Route-Map.git"
+  },
+  "license": "MIT",
   "scripts": {
     "pbiviz": "pbiviz",
     "start": "pbiviz start",

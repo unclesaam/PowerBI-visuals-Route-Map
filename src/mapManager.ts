@@ -1,6 +1,10 @@
 "use strict";
 import * as L from "leaflet";
 
+/**
+ * MapManager handles Leaflet map initialization, tile layers, and route layer management.
+ * It also generates curved Bézier paths between origin and destination points.
+ */
 export class MapManager {
     private map: L.Map;
     private routeGroup: L.LayerGroup;

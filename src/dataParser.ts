@@ -4,6 +4,10 @@ import {RouteData} from "./types";
 import IVisualHost = powerbi.extensibility.visual.IVisualHost;
 import DataView = powerbi.DataView;
 
+/**
+ * DataParser handles extraction and validation of data from Power BI DataView.
+ * It validates coordinates and filters out invalid routes before rendering.
+ */
 export class DataParser {
     private host: IVisualHost;
     private dataView: DataView;

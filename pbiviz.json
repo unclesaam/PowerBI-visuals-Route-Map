@@ -1,11 +1,11 @@
 {
   "visual": {
-    "name": "color-arc-map",
-    "displayName": "Color Arc Map",
-    "guid": "colorArcMapVisual",
+    "name": "routeMap",
+    "displayName": "Route Map",
+    "guid": "routeMapVisualE7A1B2C3",
     "visualClassName": "Visual",
     "version": "1.0.0.0",
-    "description": "A visual displaying routes between locations on a map",
+    "description": "Interactive map visual for origin-destination routes with conditional formatting, dynamic scaling, and cross-filtering support",
     "supportUrl": "https://github.com/unclesaam/PowerBI-visuals-Route-Map",
     "gitHubUrl": "https://github.com/unclesaam/PowerBI-visuals-Route-Map"
   },

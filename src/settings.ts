@@ -1,6 +1,7 @@
 "use strict";
 
 import {formattingSettings} from "powerbi-visuals-utils-formattingmodel";
+import {dataViewWildcard} from "powerbi-visuals-utils-dataviewutils";
 
 /**
  * Route Settings Card
@@ -8,7 +9,6 @@ import {formattingSettings} from "powerbi-visuals-utils-formattingmodel";
 export class RouteSettingsCard extends formattingSettings.Card {
     name: string = "routeSettings";
     displayName: string = "Routes";
-    slices: Array<formattingSettings.Slice> = [];
 
     lineWidth = new formattingSettings.NumUpDown({
         name: "lineWidth",
@@ -21,13 +21,10 @@ export class RouteSettingsCard extends formattingSettings.Card {
         displayName: "Line Color",
         value: {value: "#007ACC"},
         instanceKind: powerbi.VisualEnumerationInstanceKinds.ConstantOrRule,
+        selector: dataViewWildcard.createDataViewWildcardSelector(dataViewWildcard.DataViewWildcardMatchingOption.InstancesAndTotals)
     });
 
-    constructor() {
-        super();
-        this.slices.push(this.lineWidth);
-        this.slices.push(this.lineColor);
-    }
+    slices: Array<formattingSettings.Slice> = [this.lineWidth, this.lineColor];
 }
 
 /**
@@ -36,7 +33,6 @@ export class RouteSettingsCard extends formattingSettings.Card {
 export class BubbleSettingsCard extends formattingSettings.Card {
     name: string = "bubbleSettings";
     displayName: string = "Bubbles";
-    slices: Array<formattingSettings.Slice> = [];
 
     bubbleSize = new formattingSettings.NumUpDown({
         name: "bubbleSize",
@@ -44,10 +40,7 @@ export class BubbleSettingsCard extends formattingSettings.Card {
         value: 3
     });
 
-    constructor() {
-        super();
-        this.slices.push(this.bubbleSize);
-    }
+    slices: Array<formattingSettings.Slice> = [this.bubbleSize];
 }
 
 /**

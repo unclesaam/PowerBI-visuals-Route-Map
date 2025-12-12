@@ -103,7 +103,7 @@ export class RouteRenderer {
                 ? minWidth + Math.pow(norm, 0.5) * (maxWidth - minWidth)
                 : lineWidthSetting;
 
-            const routeColor = this.colorManager.getRouteColor();
+            const routeColor = this.colorManager.getRouteColor(route, index);
 
             const pathCoordinates: [number, number][] = this.mapManager.getCurvedPathCoordinates(
                 [route.originLat, route.originLng],

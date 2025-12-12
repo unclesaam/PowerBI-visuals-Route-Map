@@ -153,6 +153,57 @@
           }
         }
       ],
+      "table": {
+        "rows": {
+          "select": [
+            {
+              "for": {
+                "in": "origin"
+              }
+            },
+            {
+              "for": {
+                "in": "originLat"
+              }
+            },
+            {
+              "for": {
+                "in": "originLng"
+              }
+            },
+            {
+              "for": {
+                "in": "destination"
+              }
+            },
+            {
+              "for": {
+                "in": "destLat"
+              }
+            },
+            {
+              "for": {
+                "in": "destLng"
+              }
+            },
+            {
+              "for": {
+                "in": "lineWidth"
+              }
+            },
+            {
+              "for": {
+                "in": "tooltips"
+              }
+            }
+          ],
+          "dataReductionAlgorithm": {
+            "top": {
+              "count": 30000
+            }
+          }
+        }
+      },
       "categorical": {
         "categories": {
           "select": [
