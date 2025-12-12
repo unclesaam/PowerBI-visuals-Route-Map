@@ -4,7 +4,6 @@ import {FormattingSettingsService} from "powerbi-visuals-utils-formattingmodel";
 import "./../style/visual.less";
 import {VisualFormattingSettingsModel} from "./settings";
 import {createTooltipServiceWrapper, ITooltipServiceWrapper} from "powerbi-visuals-utils-tooltiputils";
-import {RouteData} from "./types";
 import {DataParser} from "./dataParser";
 import {ColorManager} from "./colorManager";
 import {MapManager} from "./mapManager";
@@ -20,8 +19,6 @@ import IVisualEventService = powerbi.extensibility.IVisualEventService;
 export class Visual implements IVisual {
     private target: HTMLElement;
     private mapContainer: HTMLElement;
-    private width: number = 0;
-    private height: number = 0;
     private formattingSettings: VisualFormattingSettingsModel;
     private formattingSettingsService: FormattingSettingsService;
     private host: IVisualHost;
@@ -71,18 +68,25 @@ export class Visual implements IVisual {
         }
 
         try {
-            if (!options || !options.dataViews || !options.dataViews[0]) return;
+            if (!options?.dataViews?.[0]) return;
+
             this.dataView = options.dataViews[0];
-            this.formattingSettings = this.formattingSettingsService.populateFormattingSettingsModel(VisualFormattingSettingsModel, options.dataViews);
+            this.formattingSettings = this.formattingSettingsService.populateFormattingSettingsModel(
+                VisualFormattingSettingsModel,
+                options.dataViews
+            );
+
             const categorical = this.dataView.categorical;
-            this.width = options.viewport.width;
-            this.height = options.viewport.height;
-            this.target.style.width = `${this.width}px`;
-            this.target.style.height = `${this.height}px`;
+            this.target.style.width = `${options.viewport.width}px`;
+            this.target.style.height = `${options.viewport.height}px`;
             this.mapManager.invalidateSize();
 
             this.dataParser = new DataParser(this.host, this.dataView);
-            const colorManager = new ColorManager(this.host.colorPalette, this.dataView, this.formattingSettings);
+            const colorManager = new ColorManager(this.host.colorPalette, this.formattingSettings);
+
+            const data = this.dataParser.parseRouteData(categorical);
+            const selectionIds = this.dataParser.createSelectionIds(data.length);
+            data.forEach((route, i) => route.selectionId = selectionIds[i]);
 
             this.routeRenderer = new RouteRenderer(
                 this.mapManager,
@@ -95,13 +99,6 @@ export class Visual implements IVisual {
             );
 
             const tooltipFields = this.dataParser.getTooltipFields(categorical);
-            const data: RouteData[] = this.dataParser.parseRouteData(categorical);
-
-            const selectionIds = this.dataParser.createSelectionIds(categorical);
-
-            data.forEach((route, i) => {
-                route.selectionId = selectionIds[i];
-            });
 
             this.routeRenderer.drawRoutes(data, options.viewport, tooltipFields, categorical);
 
@@ -117,41 +114,6 @@ export class Visual implements IVisual {
         }
     }
 
-    // public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstance[] {
-    //     const instances: VisualObjectInstance[] = [];
-    //
-    //     if (options.objectName === 'routeSettings') {
-    //         const metadata = this.dataView?.metadata;
-    //         const objects = metadata?.objects;
-    //         const persistedLineColor = objects?.routeSettings?.lineColor as powerbi.Fill;
-    //
-    //         instances.push({
-    //             objectName: 'routeSettings',
-    //             properties: {
-    //                 lineWidth: this.formattingSettings.routeSettingsCard.lineWidth.value,
-    //                 lineColor: persistedLineColor || this.formattingSettings.routeSettingsCard.lineColor.value,
-    //                 bubbleSize: this.formattingSettings.routeSettingsCard.bubbleSize.value,
-    //             },
-    //             selector: null,
-    //         });
-    //     }
-    //
-    //     if (options.objectName === 'legend') {
-    //         instances.push({
-    //             objectName: 'legend',
-    //             properties: {
-    //                 show: this.formattingSettings.legendSettings.show.value,
-    //                 position: this.formattingSettings.legendSettings.position.value.value,
-    //                 fontSize: this.formattingSettings.legendSettings.fontSize.value,
-    //                 showTitle: this.formattingSettings.legendSettings.showTitle.value,
-    //                 titleText: this.formattingSettings.legendSettings.titleText.value
-    //             },
-    //             selector: null
-    //         });
-    //     }
-    //
-    //     return instances;
-    // }
     public getFormattingModel(): powerbi.visuals.FormattingModel {
         return this.formattingSettingsService.buildFormattingModel(this.formattingSettings);
     }

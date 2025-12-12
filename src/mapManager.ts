@@ -3,22 +3,15 @@ import * as L from "leaflet";
 
 export class MapManager {
     private map: L.Map;
-    private tileLayer: L.TileLayer;
     private routeGroup: L.LayerGroup;
-    private mapContainer: HTMLElement;
 
     constructor(mapContainer: HTMLElement) {
-        this.mapContainer = mapContainer;
-        this.initializeMap();
-    }
-
-    private initializeMap(): void {
-        this.map = L.map(this.mapContainer, {
+        this.map = L.map(mapContainer, {
             zoomControl: true,
             attributionControl: true
         }).setView([0, 0], 2);
 
-        this.tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors',
             maxZoom: 18
         }).addTo(this.map);

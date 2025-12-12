@@ -2,25 +2,18 @@
 import powerbi from "powerbi-visuals-api";
 import {VisualFormattingSettingsModel} from "./settings";
 import IColorPalette = powerbi.extensibility.IColorPalette;
-import DataView = powerbi.DataView;
 
 export class ColorManager {
-    private colorPalette: IColorPalette;
-    private dataView: DataView;
-    private formattingSettings: VisualFormattingSettingsModel;
     private isHighContrast: boolean;
     private foregroundColor: string;
     private backgroundColor: string;
     private foregroundSelectedColor: string;
+    private lineColor: string;
 
     constructor(
         colorPalette: IColorPalette,
-        dataView: DataView,
         formattingSettings: VisualFormattingSettingsModel
     ) {
-        this.colorPalette = colorPalette;
-        this.dataView = dataView;
-        this.formattingSettings = formattingSettings;
         this.isHighContrast = (colorPalette as any).isHighContrast || false;
 
         if (this.isHighContrast) {
@@ -32,6 +25,8 @@ export class ColorManager {
             this.backgroundColor = "#fff";
             this.foregroundSelectedColor = "#000";
         }
+
+        this.lineColor = formattingSettings.routeSettingsCard.lineColor.value.value;
     }
 
     public getIsHighContrast(): boolean {
@@ -51,10 +46,7 @@ export class ColorManager {
     }
 
     public getRouteColor(): string {
-        if (this.isHighContrast) {
-            return this.foregroundColor;
-        }
-        return this.formattingSettings.routeSettingsCard.lineColor.value.value;
+        return this.isHighContrast ? this.foregroundColor : this.lineColor;
     }
 }
 

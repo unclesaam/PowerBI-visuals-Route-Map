@@ -14,25 +14,16 @@ export class SelectionHandler {
         return this.selectedIds;
     }
 
-    public setSelectedIds(ids: powerbi.extensibility.ISelectionId[]): void {
-        this.selectedIds = ids;
-    }
-
     public getContextMenuShown(): boolean {
         return this.contextMenuShown;
-    }
-
-    public setContextMenuShown(value: boolean): void {
-        this.contextMenuShown = value;
     }
 
     public async handleSelection(
         selectionId: powerbi.extensibility.ISelectionId | powerbi.extensibility.ISelectionId[],
         multiSelect: boolean
     ): Promise<powerbi.extensibility.ISelectionId[]> {
-        const ids = await this.selectionManager.select(selectionId, multiSelect);
-        this.selectedIds = ids;
-        return ids;
+        this.selectedIds = await this.selectionManager.select(selectionId, multiSelect);
+        return this.selectedIds;
     }
 
     public async clearSelection(): Promise<void> {
@@ -45,9 +36,8 @@ export class SelectionHandler {
         position: { x: number; y: number }
     ): Promise<void> {
         this.contextMenuShown = true;
-        await this.selectionManager.showContextMenu(selectionId, position).finally(() => {
-            this.contextMenuShown = false;
-        });
+        await this.selectionManager.showContextMenu(selectionId, position)
+            .finally(() => this.contextMenuShown = false);
     }
 }
 
