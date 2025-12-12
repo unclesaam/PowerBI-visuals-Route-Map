@@ -1,18 +1,18 @@
 {
   "visual": {
-    "name": "route-map-test-1",
-    "displayName": "Route Map Test 1",
-    "guid": "routeMapTest1",
+    "name": "color-arc-map",
+    "displayName": "Color Arc Map",
+    "guid": "colorArcMapVisual",
     "visualClassName": "Visual",
-    "version": "1.1.4.1",
+    "version": "1.0.0.0",
     "description": "A visual displaying routes between locations on a map",
-    "supportUrl": "www.lytiqa.se",
-    "gitHubUrl": ""
+    "supportUrl": "https://github.com/unclesaam/PowerBI-visuals-Route-Map",
+    "gitHubUrl": "https://github.com/unclesaam/PowerBI-visuals-Route-Map"
   },
   "apiVersion": "5.10.0",
   "author": {
-    "name": "John Hagelin",
-    "email": "john@lytiqa.se"
+    "name": "Samuel Cloutier",
+    "email": "samuel.cloutier.5@ulaval.ca"
   },
   "assets": {
     "icon": "assets/icon.png"
