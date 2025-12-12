@@ -41,8 +41,7 @@ export class RouteRenderer {
         data: RouteData[],
         viewport: powerbi.IViewport,
         tooltipFields: (powerbi.DataViewValueColumn | powerbi.DataViewCategoryColumn)[],
-        categorical: powerbi.DataViewCategorical,
-        legendColumn: powerbi.DataViewCategoricalColumn | powerbi.DataViewValueColumn | undefined
+        categorical: powerbi.DataViewCategorical
     ): void {
         if (!data.length) return;
 
@@ -104,26 +103,16 @@ export class RouteRenderer {
                 ? minWidth + Math.pow(norm, 0.5) * (maxWidth - minWidth)
                 : lineWidthSetting;
 
-            const routeColor = legendColumn
-                ? this.colorManager.getColorForValue(route.legendValue, legendColumn)
-                : this.formattingSettings.routeSettingsCard.lineColor.value.value;
+            const routeColor = this.colorManager.getRouteColor();
 
             const pathCoordinates: [number, number][] = this.mapManager.getCurvedPathCoordinates(
                 [route.originLat, route.originLng],
                 [route.destLat, route.destLng]
             );
 
-            const originalLegendIndex = legendColumn && "values" in legendColumn
-                ? legendColumn.values.findIndex(v => (v?.toString() || "") === route.legendValue)
-                : -1;
-
-            const selectionId = legendColumn && originalLegendIndex >= 0
-                ? this.host.createSelectionIdBuilder()
-                    .withCategory(legendColumn as powerbi.DataViewCategoryColumn, originalLegendIndex)
-                    .createSelectionId()
-                : this.host.createSelectionIdBuilder()
-                    .withTable(this.dataView.table, index)
-                    .createSelectionId();
+            const selectionId = this.host.createSelectionIdBuilder()
+                .withTable(this.dataView.table, index)
+                .createSelectionId();
 
             const isHighlighted = !hasHighlights || (highlightedColumn?.highlights?.[index] != null);
 
@@ -154,7 +143,7 @@ export class RouteRenderer {
             }).addTo(this.mapManager.getRouteGroup());
 
             this.addPolylineTooltip(polyline, route, tooltipFields, index);
-            this.addPolylineInteraction(polyline, route, data, viewport, tooltipFields, categorical, legendColumn);
+            this.addPolylineInteraction(polyline, route, data, viewport, tooltipFields, categorical);
 
             bounds.extend([route.originLat, route.originLng]);
             bounds.extend([route.destLat, route.destLng]);
@@ -174,7 +163,7 @@ export class RouteRenderer {
             }).addTo(this.mapManager.getRouteGroup());
 
             this.addOriginCircleTooltip(originCircle, route, tooltipFields, index);
-            this.addOriginCircleInteraction(originCircle, route, data, viewport, tooltipFields, categorical, legendColumn);
+            this.addOriginCircleInteraction(originCircle, route, data, viewport, tooltipFields, categorical);
 
             const destCircle = L.circleMarker([route.destLat, route.destLng], {
                 radius: destRadius,
@@ -185,7 +174,7 @@ export class RouteRenderer {
             }).addTo(this.mapManager.getRouteGroup());
 
             this.addDestCircleTooltip(destCircle, route, tooltipFields, index);
-            this.addDestCircleInteraction(destCircle, route, data, viewport, tooltipFields, categorical, legendColumn);
+            this.addDestCircleInteraction(destCircle, route, data, viewport, tooltipFields, categorical);
         });
 
         this.mapManager.fitBounds(bounds);
@@ -230,13 +219,12 @@ export class RouteRenderer {
         data: RouteData[],
         viewport: powerbi.IViewport,
         tooltipFields: (powerbi.DataViewValueColumn | powerbi.DataViewCategoryColumn)[],
-        categorical: powerbi.DataViewCategorical,
-        legendColumn: powerbi.DataViewCategoricalColumn | powerbi.DataViewValueColumn | undefined
+        categorical: powerbi.DataViewCategorical
     ): void {
         polyline.on("click", (e: any) => {
             const multiSelect = e.originalEvent.ctrlKey || e.originalEvent.metaKey;
             this.selectionHandler.handleSelection(route.selectionId, multiSelect).then(() => {
-                this.drawRoutes(data, viewport, tooltipFields, categorical, legendColumn);
+                this.drawRoutes(data, viewport, tooltipFields, categorical);
             });
         });
 
@@ -288,8 +276,7 @@ export class RouteRenderer {
         data: RouteData[],
         viewport: powerbi.IViewport,
         tooltipFields: (powerbi.DataViewValueColumn | powerbi.DataViewCategoryColumn)[],
-        categorical: powerbi.DataViewCategorical,
-        legendColumn: powerbi.DataViewCategoricalColumn | powerbi.DataViewValueColumn | undefined
+        categorical: powerbi.DataViewCategorical
     ): void {
         originCircle.on("click", (e: any) => {
             const lat = route.originLat;
@@ -310,12 +297,12 @@ export class RouteRenderer {
 
             if (allSelected) {
                 this.selectionHandler.clearSelection().then(() => {
-                    this.drawRoutes(data, viewport, tooltipFields, categorical, legendColumn);
+                    this.drawRoutes(data, viewport, tooltipFields, categorical);
                 });
             } else {
                 const multiSelect = e.originalEvent.ctrlKey || e.originalEvent.metaKey;
                 this.selectionHandler.handleSelection(selectionIds, multiSelect).then(() => {
-                    this.drawRoutes(data, viewport, tooltipFields, categorical, legendColumn);
+                    this.drawRoutes(data, viewport, tooltipFields, categorical);
                 });
             }
         });
@@ -380,8 +367,7 @@ export class RouteRenderer {
         data: RouteData[],
         viewport: powerbi.IViewport,
         tooltipFields: (powerbi.DataViewValueColumn | powerbi.DataViewCategoryColumn)[],
-        categorical: powerbi.DataViewCategorical,
-        legendColumn: powerbi.DataViewCategoricalColumn | powerbi.DataViewValueColumn | undefined
+        categorical: powerbi.DataViewCategorical
     ): void {
         destCircle.on("click", (e: any) => {
             const lat = route.destLat;
@@ -401,12 +387,12 @@ export class RouteRenderer {
 
             if (allSelected) {
                 this.selectionHandler.clearSelection().then(() => {
-                    this.drawRoutes(data, viewport, tooltipFields, categorical, legendColumn);
+                    this.drawRoutes(data, viewport, tooltipFields, categorical);
                 });
             } else {
                 const multiSelect = e.originalEvent.ctrlKey || e.originalEvent.metaKey;
                 this.selectionHandler.handleSelection(selectionIds, multiSelect).then(() => {
-                    this.drawRoutes(data, viewport, tooltipFields, categorical, legendColumn);
+                    this.drawRoutes(data, viewport, tooltipFields, categorical);
                 });
             }
         });

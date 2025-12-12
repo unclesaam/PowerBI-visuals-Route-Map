@@ -34,7 +34,6 @@ export class DataParser {
         const destinationColumn = this.getColumnByRole(categorical, "destination");
         const destLatColumn = this.getColumnByRole(categorical, "destLat");
         const destLngColumn = this.getColumnByRole(categorical, "destLng");
-        const legendColumn = this.getColumnByRole(categorical, "legend");
         const lineWidthColumn = this.getColumnByRole(categorical, "lineWidth");
 
         const originValues = originColumn && "values" in originColumn ? originColumn.values : [];
@@ -43,7 +42,6 @@ export class DataParser {
         const destinationValues = destinationColumn && "values" in destinationColumn ? destinationColumn.values : [];
         const destLatValues = destLatColumn && "values" in destLatColumn ? destLatColumn.values : [];
         const destLngValues = destLngColumn && "values" in destLngColumn ? destLngColumn.values : [];
-        const legendValues = legendColumn && "values" in legendColumn ? legendColumn.values : [];
         const lineWidthValues = lineWidthColumn && "values" in lineWidthColumn ? lineWidthColumn.values : [];
 
         const data: RouteData[] = originLatValues.map((_, index) => ({
@@ -53,27 +51,20 @@ export class DataParser {
             originLng: parseFloat(originLngValues[index] as any),
             destLat: parseFloat(destLatValues[index] as any),
             destLng: parseFloat(destLngValues[index] as any),
-            lineWidth: lineWidthValues ? parseFloat(lineWidthValues[index] as any) : NaN,
-            legendValue: legendValues[index]?.toString() || ''
+            lineWidth: lineWidthValues ? parseFloat(lineWidthValues[index] as any) : NaN
         })).filter(route => ValidationUtils.isValidRouteData(route));
 
         return data;
     }
 
     public createSelectionIds(categorical: powerbi.DataViewCategorical): powerbi.visuals.ISelectionId[] {
-        const legendColumn = this.getColumnByRole(categorical, "legend");
-        const legendValues = legendColumn && "values" in legendColumn ? legendColumn.values : [];
+        const originLatColumn = this.getColumnByRole(categorical, "originLat");
+        const originLatValues = originLatColumn && "values" in originLatColumn ? originLatColumn.values : [];
 
-        const selectionIds = legendValues.map((value, index) => {
-            if (legendColumn) {
-                return this.host.createSelectionIdBuilder()
-                    .withCategory(legendColumn as powerbi.DataViewCategoryColumn, index)
-                    .createSelectionId();
-            } else {
-                return this.host.createSelectionIdBuilder()
-                    .withTable(this.dataView.table, index)
-                    .createSelectionId();
-            }
+        const selectionIds = originLatValues.map((_, index) => {
+            return this.host.createSelectionIdBuilder()
+                .withTable(this.dataView.table, index)
+                .createSelectionId();
         });
 
         return selectionIds;

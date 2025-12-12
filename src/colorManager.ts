@@ -8,7 +8,6 @@ export class ColorManager {
     private colorPalette: IColorPalette;
     private dataView: DataView;
     private formattingSettings: VisualFormattingSettingsModel;
-    private colorCache: Map<string, string> = new Map();
     private isHighContrast: boolean;
     private foregroundColor: string;
     private backgroundColor: string;
@@ -51,32 +50,11 @@ export class ColorManager {
         return this.foregroundSelectedColor;
     }
 
-
-    public getColorForValue(value: string, legendColumn: powerbi.DataViewCategoricalColumn | powerbi.DataViewValueColumn | undefined): string {
-        console.log('value:', value)
-        console.log('legendColumn:', legendColumn)
-
+    public getRouteColor(): string {
         if (this.isHighContrast) {
             return this.foregroundColor;
         }
-
-        if (!legendColumn) {
-            return this.formattingSettings.routeSettingsCard.lineColor.value.value;
-        }
-
-        const index = ("values" in legendColumn) ? legendColumn.values.findIndex(v => v?.toString() === value) : -1;
-        const object = ("objects" in legendColumn) ? legendColumn.objects?.[index] : undefined;
-        const colorObj = object?.dataPoint?.fill as powerbi.Fill;
-        const userColor = colorObj?.solid?.color;
-
-        if (userColor) {
-            return userColor;
-        }
-
-        if (!this.colorCache.has(value)) {
-            this.colorCache.set(value, this.colorPalette.getColor(value).value);
-        }
-        return this.colorCache.get(value);
+        return this.formattingSettings.routeSettingsCard.lineColor.value.value;
     }
 }
 

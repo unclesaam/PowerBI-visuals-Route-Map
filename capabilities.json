@@ -72,11 +72,6 @@
       ]
     },
     {
-      "name": "legend",
-      "kind": "Grouping",
-      "displayName": "Legend"
-    },
-    {
       "name": "lineWidth",
       "kind": "Measure",
       "displayName": "Line Width",
@@ -125,64 +120,6 @@
         }
       }
     },
-    "legend": {
-      "displayName": "Legend",
-      "properties": {
-        "show": {
-          "displayName": "Show",
-          "type": {
-            "bool": true
-          }
-        },
-        "position": {
-          "displayName": "Position",
-          "type": {
-            "enumeration": [
-              {
-                "value": "Top",
-                "displayName": "Top"
-              },
-              {
-                "value": "Bottom",
-                "displayName": "Bottom"
-              },
-              {
-                "value": "Left",
-                "displayName": "Left"
-              },
-              {
-                "value": "Right",
-                "displayName": "Right"
-              }
-            ]
-          }
-        },
-        "titleText": {
-          "displayName": "Title",
-          "type": {
-            "text": true
-          }
-        },
-        "fontSize": {
-          "displayName": "Text Size",
-          "type": {
-            "numeric": true
-          }
-        },
-        "fontFamily": {
-          "displayName": "Font family",
-          "type": {
-            "text": true
-          }
-        },
-        "showTitle": {
-          "displayName": "Title",
-          "type": {
-            "bool": true
-          }
-        }
-      }
-    },
     "tooltips": {
       "displayName": "Tooltips",
       "description": "Tooltips settings",
@@ -211,9 +148,6 @@
           "destLng": {
             "max": 1
           },
-          "legend": {
-            "max": 1
-          },
           "lineWidth": {
             "max": 1
           }
@@ -222,11 +156,6 @@
       "categorical": {
         "categories": {
           "select": [
-            {
-              "for": {
-                "in": "legend"
-              }
-            },
             {
               "for": {
                 "in": "origin"

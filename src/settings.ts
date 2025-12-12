@@ -3,58 +3,6 @@
 import {formattingSettings} from "powerbi-visuals-utils-formattingmodel";
 
 /**
- * Legend Settings Card
- */
-export class LegendSettings extends formattingSettings.Card {
-    show = new formattingSettings.ToggleSwitch({
-        name: "show",
-        displayName: "Show",
-        value: true
-    });
-
-    position = new formattingSettings.ItemDropdown({
-        name: "position",
-        displayName: "Position",
-        value: {value: "Top", displayName: "Top"},
-        items: [
-            {value: "Top", displayName: "Top"},
-            {value: "Bottom", displayName: "Bottom"},
-            {value: "Left", displayName: "Left"},
-            {value: "Right", displayName: "Right"}
-        ]
-    });
-
-    titleText = new formattingSettings.TextInput({
-        name: "titleText",
-        displayName: "Title",
-        value: "",
-        placeholder: "Enter legend title"
-    });
-
-    fontSize = new formattingSettings.NumUpDown({
-        name: "fontSize",
-        displayName: "Text Size",
-        value: 8
-    });
-
-    showTitle = new formattingSettings.ToggleSwitch({
-        name: "showTitle",
-        displayName: "Title",
-        value: true
-    });
-
-    name: string = "legend";
-    displayName: string = "Legend";
-    slices: Array<formattingSettings.Slice> = [
-        this.show,
-        this.position,
-        this.showTitle,
-        this.titleText,
-        this.fontSize
-    ];
-}
-
-/**
  * Route Settings Card
  */
 export class RouteSettingsCard extends formattingSettings.Card {
@@ -106,13 +54,11 @@ export class BubbleSettingsCard extends formattingSettings.Card {
  * Visual settings model class
  */
 export class VisualFormattingSettingsModel extends formattingSettings.Model {
-    legendSettings = new LegendSettings();
     routeSettingsCard = new RouteSettingsCard();
     bubbleSettingsCard = new BubbleSettingsCard();
 
     cards: formattingSettings.Card[] = [
         this.routeSettingsCard,
-        this.bubbleSettingsCard,
-        this.legendSettings,
+        this.bubbleSettingsCard
     ];
 }

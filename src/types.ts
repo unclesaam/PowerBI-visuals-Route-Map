@@ -10,7 +10,6 @@ export interface RouteData {
     destLat: number;
     destLng: number;
     lineWidth: number;
-    legendValue: string;
     selectionId?: ISelectionId;
 }
 
