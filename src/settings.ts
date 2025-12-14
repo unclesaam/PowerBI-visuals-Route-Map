@@ -44,14 +44,33 @@ export class BubbleSettingsCard extends formattingSettings.Card {
 }
 
 /**
+ * Map Settings Card
+ */
+export class MapSettingsCard extends formattingSettings.Card {
+    name: string = "mapSettings";
+    displayName: string = "Map";
+
+    autoZoom = new formattingSettings.ToggleSwitch({
+        name: "autoZoom",
+        displayName: "Auto zoom",
+        description: "Automatically recenter map to show displayed points when data changes",
+        value: true
+    });
+
+    slices: Array<formattingSettings.Slice> = [this.autoZoom];
+}
+
+/**
  * Visual settings model class
  */
 export class VisualFormattingSettingsModel extends formattingSettings.Model {
     routeSettingsCard = new RouteSettingsCard();
     bubbleSettingsCard = new BubbleSettingsCard();
+    mapSettingsCard = new MapSettingsCard();
 
     cards: formattingSettings.Card[] = [
         this.routeSettingsCard,
-        this.bubbleSettingsCard
+        this.bubbleSettingsCard,
+        this.mapSettingsCard
     ];
 }

@@ -120,6 +120,18 @@
         }
       }
     },
+    "mapSettings": {
+      "displayName": "Map",
+      "properties": {
+        "autoZoom": {
+          "displayName": "Auto zoom",
+          "description": "Automatically recenter map to show displayed points when data changes",
+          "type": {
+            "bool": true
+          }
+        }
+      }
+    },
     "tooltips": {
       "displayName": "Tooltips",
       "description": "Tooltips settings",

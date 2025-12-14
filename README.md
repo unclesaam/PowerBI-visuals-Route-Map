@@ -73,6 +73,12 @@ from [John Hagelin](https://github.com/Fruktkorg). Many thanks to him for open-s
 
 - **Bubble Size** (1-10): Base size for origin/destination markers
 
+### Map Settings
+
+- **Auto zoom** (Toggle, default: ON): When enabled, the map automatically recenters to show all displayed points
+  whenever data changes. When disabled, the map maintains its current zoom level and position, allowing manual
+  exploration without automatic repositioning.
+
 ### How to Apply Conditional Formatting
 
 1. In the format pane, find **Route Settings** → **Line Color**
@@ -87,9 +93,7 @@ from [John Hagelin](https://github.com/Fruktkorg). Many thanks to him for open-s
 
 ### From Microsoft AppSource
 
-1. In Power BI Desktop, go to **Get more visuals** (three dots in Visualizations pane)
-2. Search for **"Route Map"**
-3. Click **Add**
+This Visual is not yet published on AppSource. Please check back later.
 
 ### Manual Installation
 

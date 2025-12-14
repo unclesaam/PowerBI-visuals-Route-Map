@@ -8,6 +8,7 @@ import * as L from "leaflet";
 export class MapManager {
     private map: L.Map;
     private routeGroup: L.LayerGroup;
+    private autoZoom: boolean = true;
 
     constructor(mapContainer: HTMLElement) {
         this.map = L.map(mapContainer, {
@@ -35,8 +36,12 @@ export class MapManager {
         this.map.invalidateSize();
     }
 
+    public setAutoZoom(enabled: boolean): void {
+        this.autoZoom = enabled;
+    }
+
     public fitBounds(bounds: L.LatLngBounds): void {
-        if (bounds.isValid()) {
+        if (this.autoZoom && bounds.isValid()) {
             this.map.fitBounds(bounds);
         }
     }
