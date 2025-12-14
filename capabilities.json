@@ -109,8 +109,19 @@
         }
       }
     },
-    "bubbleSettings": {
-      "displayName": "Bubbles Settings",
+    "originBubbles": {
+      "displayName": "Origin Bubbles",
+      "properties": {
+        "bubbleSize": {
+          "displayName": "Bubble Size",
+          "type": {
+            "numeric": true
+          }
+        }
+      }
+    },
+    "destinationBubbles": {
+      "displayName": "Destination Bubbles",
       "properties": {
         "bubbleSize": {
           "displayName": "Bubble Size",

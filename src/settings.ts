@@ -28,16 +28,32 @@ export class RouteSettingsCard extends formattingSettings.Card {
 }
 
 /**
- *  Bubble Settings Card
+ * Origin Bubbles Settings Card
  */
-export class BubbleSettingsCard extends formattingSettings.Card {
-    name: string = "bubbleSettings";
-    displayName: string = "Bubbles";
+export class OriginBubblesCard extends formattingSettings.Card {
+    name: string = "originBubbles";
+    displayName: string = "Origin Bubbles";
 
     bubbleSize = new formattingSettings.NumUpDown({
         name: "bubbleSize",
         displayName: "Bubble Size",
-        value: 3
+        value: 2
+    });
+
+    slices: Array<formattingSettings.Slice> = [this.bubbleSize];
+}
+
+/**
+ * Destination Bubbles Settings Card
+ */
+export class DestinationBubblesCard extends formattingSettings.Card {
+    name: string = "destinationBubbles";
+    displayName: string = "Destination Bubbles";
+
+    bubbleSize = new formattingSettings.NumUpDown({
+        name: "bubbleSize",
+        displayName: "Bubble Size",
+        value: 2
     });
 
     slices: Array<formattingSettings.Slice> = [this.bubbleSize];
@@ -65,12 +81,14 @@ export class MapSettingsCard extends formattingSettings.Card {
  */
 export class VisualFormattingSettingsModel extends formattingSettings.Model {
     routeSettingsCard = new RouteSettingsCard();
-    bubbleSettingsCard = new BubbleSettingsCard();
+    originBubblesCard = new OriginBubblesCard();
+    destinationBubblesCard = new DestinationBubblesCard();
     mapSettingsCard = new MapSettingsCard();
 
     cards: formattingSettings.Card[] = [
         this.routeSettingsCard,
-        this.bubbleSettingsCard,
+        this.originBubblesCard,
+        this.destinationBubblesCard,
         this.mapSettingsCard
     ];
 }

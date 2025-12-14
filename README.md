@@ -69,9 +69,13 @@ from [John Hagelin](https://github.com/Fruktkorg). Many thanks to him for open-s
 - **Line Width** (1-10): Base width for route lines
 - **Line Color**: Default color or set up conditional formatting rules
 
-### Bubble Settings
+### Origin Bubbles
 
-- **Bubble Size** (1-10): Base size for origin/destination markers
+- **Bubble Size** (1-10): Base size for origin point markers. The actual size scales based on the number of routes originating from each location.
+
+### Destination Bubbles
+
+- **Bubble Size** (1-10): Base size for destination point markers. The actual size scales based on the number of routes ending at each location.
 
 ### Map Settings
 

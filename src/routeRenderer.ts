@@ -49,7 +49,8 @@ export class RouteRenderer {
         this.mapManager.setAutoZoom(this.formattingSettings.mapSettingsCard.autoZoom.value);
 
         const lineWidthSetting = this.formattingSettings.routeSettingsCard.lineWidth.value;
-        const bubbleSizeSetting = this.formattingSettings.bubbleSettingsCard.bubbleSize.value;
+        const originBubbleSizeSetting = this.formattingSettings.originBubblesCard.bubbleSize.value;
+        const destBubbleSizeSetting = this.formattingSettings.destinationBubblesCard.bubbleSize.value;
 
         const validWidths = data.map(d => d.lineWidth).filter(v => !isNaN(v));
         const hasValidWidths = validWidths.length > 0;
@@ -87,9 +88,16 @@ export class RouteRenderer {
             destMarkers[destKey].push(route);
         });
 
-        const getRadius = (count: number, max: number) => {
-            const minR = bubbleSizeSetting;
-            const maxR = bubbleSizeSetting * 2.5;
+        const getOriginRadius = (count: number, max: number) => {
+            const minR = originBubbleSizeSetting;
+            const maxR = originBubbleSizeSetting * 2.5;
+            const scale = Math.sqrt(count / max);
+            return minR + scale * (maxR - minR);
+        };
+
+        const getDestRadius = (count: number, max: number) => {
+            const minR = destBubbleSizeSetting;
+            const maxR = destBubbleSizeSetting * 2.5;
             const scale = Math.sqrt(count / max);
             return minR + scale * (maxR - minR);
         };
@@ -146,8 +154,8 @@ export class RouteRenderer {
             const originKey = `${route.originLat},${route.originLng}`;
             const destKey = `${route.destLat},${route.destLng}`;
 
-            const originRadius = getRadius(originCounts[originKey], maxOrigin);
-            const destRadius = getRadius(destCounts[destKey], maxDest);
+            const originRadius = getOriginRadius(originCounts[originKey], maxOrigin);
+            const destRadius = getDestRadius(destCounts[destKey], maxDest);
 
             const originCircle = L.circleMarker([route.originLat, route.originLng], {
                 radius: originRadius,
