@@ -9,10 +9,11 @@ export class MapManager {
     private map: L.Map;
     private routeGroup: L.LayerGroup;
     private autoZoom: boolean = true;
+    private zoomControl: L.Control.Zoom | null = null;
 
-    constructor(mapContainer: HTMLElement) {
+    constructor(mapContainer: HTMLElement, zoomButtons: boolean = false) {
         this.map = L.map(mapContainer, {
-            zoomControl: true,
+            zoomControl: false,
             attributionControl: true
         }).setView([0, 0], 2);
 
@@ -22,6 +23,11 @@ export class MapManager {
         }).addTo(this.map);
 
         this.routeGroup = L.layerGroup().addTo(this.map);
+
+        if (zoomButtons) {
+            this.zoomControl = L.control.zoom({ position: 'topleft' });
+            this.zoomControl.addTo(this.map);
+        }
     }
 
     public getMap(): L.Map {
@@ -48,6 +54,16 @@ export class MapManager {
 
     public clearRoutes(): void {
         this.routeGroup.clearLayers();
+    }
+
+    public setZoomButtons(enabled: boolean): void {
+        if (enabled && !this.zoomControl) {
+            this.zoomControl = L.control.zoom({ position: 'topleft' });
+            this.zoomControl.addTo(this.map);
+        } else if (!enabled && this.zoomControl) {
+            this.map.removeControl(this.zoomControl);
+            this.zoomControl = null;
+        }
     }
 
     public getCurvedPathCoordinates(start: [number, number], end: [number, number]): [number, number][] {

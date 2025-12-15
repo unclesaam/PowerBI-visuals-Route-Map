@@ -172,6 +172,13 @@
           "type": {
             "bool": true
           }
+        },
+        "zoomButtons": {
+          "displayName": "Zoom Buttons",
+          "description": "Show zoom buttons in the top-left corner of the map",
+          "type": {
+            "bool": true
+          }
         }
       }
     },

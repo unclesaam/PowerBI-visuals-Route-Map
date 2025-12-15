@@ -104,7 +104,14 @@ export class MapSettingsCard extends formattingSettings.Card {
         value: true
     });
 
-    slices: Array<formattingSettings.Slice> = [this.autoZoom];
+    zoomButtons = new formattingSettings.ToggleSwitch({
+        name: "zoomButtons",
+        displayName: "Zoom Buttons",
+        description: "Show zoom buttons in the top-left corner of the map",
+        value: false
+    });
+
+    slices: Array<formattingSettings.Slice> = [this.autoZoom, this.zoomButtons];
 }
 
 /**
