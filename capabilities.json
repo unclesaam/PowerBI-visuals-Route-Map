@@ -12,16 +12,6 @@
   ],
   "dataRoles": [
     {
-      "name": "origin",
-      "kind": "Grouping",
-      "displayName": "Origin",
-      "requiredTypes": [
-        {
-          "text": true
-        }
-      ]
-    },
-    {
       "name": "originLat",
       "kind": "GroupingOrMeasure",
       "displayName": "Origin Latitude",
@@ -38,16 +28,6 @@
       "requiredTypes": [
         {
           "numeric": true
-        }
-      ]
-    },
-    {
-      "name": "destination",
-      "kind": "Grouping",
-      "displayName": "Destination",
-      "requiredTypes": [
-        {
-          "text": true
         }
       ]
     },
@@ -192,16 +172,10 @@
     {
       "conditions": [
         {
-          "origin": {
-            "max": 1
-          },
           "originLat": {
             "max": 1
           },
           "originLng": {
-            "max": 1
-          },
-          "destination": {
             "max": 1
           },
           "destLat": {
@@ -220,22 +194,12 @@
           "select": [
             {
               "for": {
-                "in": "origin"
-              }
-            },
-            {
-              "for": {
                 "in": "originLat"
               }
             },
             {
               "for": {
                 "in": "originLng"
-              }
-            },
-            {
-              "for": {
-                "in": "destination"
               }
             },
             {
@@ -271,22 +235,12 @@
           "select": [
             {
               "for": {
-                "in": "origin"
-              }
-            },
-            {
-              "for": {
                 "in": "originLat"
               }
             },
             {
               "for": {
                 "in": "originLng"
-              }
-            },
-            {
-              "for": {
-                "in": "destination"
               }
             },
             {

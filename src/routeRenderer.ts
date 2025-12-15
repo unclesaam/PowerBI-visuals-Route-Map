@@ -215,10 +215,10 @@ export class RouteRenderer {
                 d3PolylineSelection,
                 () => [{
                     displayName: "Origin",
-                    value: route.origin || `${route.originLat}, ${route.originLng}`
+                    value: `${route.originLat}, ${route.originLng}`
                 }, {
                     displayName: "Destination",
-                    value: route.destination || `${route.destLat}, ${route.destLng}`
+                    value: `${route.destLat}, ${route.destLng}`
                 }],
                 () => route.selectionId ? route.selectionId.getSelector() : null
             );
@@ -275,7 +275,7 @@ export class RouteRenderer {
                 d3OriginSelection,
                 () => [{
                     displayName: "Origin",
-                    value: route.origin || `${route.originLat}, ${route.originLng}`
+                    value: `${route.originLat}, ${route.originLng}`
                 }],
                 () => route.selectionId ? route.selectionId.getSelector() : null
             );
@@ -366,7 +366,7 @@ export class RouteRenderer {
                 d3DestSelection,
                 () => [{
                     displayName: "Destination",
-                    value: route.destination || `${route.destLat}, ${route.destLng}`
+                    value: `${route.destLat}, ${route.destLng}`
                 }],
                 () => route.selectionId ? route.selectionId.getSelector() : null
             );

@@ -31,10 +31,8 @@ export class DataParser {
     }
 
     public parseRouteData(categorical: powerbi.DataViewCategorical): RouteData[] {
-        const originCol = this.getColumn(categorical, "origin");
         const originLatCol = this.getColumn(categorical, "originLat");
         const originLngCol = this.getColumn(categorical, "originLng");
-        const destCol = this.getColumn(categorical, "destination");
         const destLatCol = this.getColumn(categorical, "destLat");
         const destLngCol = this.getColumn(categorical, "destLng");
         const lineWidthCol = this.getColumn(categorical, "lineWidth");
@@ -42,8 +40,6 @@ export class DataParser {
         const getValues = (col: any) => col && "values" in col ? col.values : [];
 
         const data: RouteData[] = getValues(originLatCol).map((_: any, i: number) => ({
-            origin: getValues(originCol)[i]?.toString() || '',
-            destination: getValues(destCol)[i]?.toString() || '',
             originLat: parseFloat(getValues(originLatCol)[i]),
             originLng: parseFloat(getValues(originLngCol)[i]),
             destLat: parseFloat(getValues(destLatCol)[i]),
