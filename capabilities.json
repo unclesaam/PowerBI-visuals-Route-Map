@@ -6,7 +6,9 @@
       "parameters": [
         "https://*.openstreetmap.org",
         "https://unpkg.com",
-        "https://tile.openstreetmap.org"
+        "https://tile.openstreetmap.org",
+        "https://*.basemaps.cartocdn.com",
+        "https://server.arcgisonline.com"
       ]
     }
   ],
@@ -166,6 +168,34 @@
     "mapSettings": {
       "displayName": "Map",
       "properties": {
+        "mapStyle": {
+          "displayName": "Map Style",
+          "description": "Choose the visual style of the map",
+          "type": {
+            "enumeration": [
+              {
+                "displayName": "OpenStreetMap Standard",
+                "value": "osm-standard"
+              },
+              {
+                "displayName": "CartoDB Positron (Light)",
+                "value": "cartodb-positron"
+              },
+              {
+                "displayName": "CartoDB Dark Matter",
+                "value": "cartodb-dark"
+              },
+              {
+                "displayName": "ESRI World Street Map",
+                "value": "esri-street"
+              },
+              {
+                "displayName": "ESRI World Imagery",
+                "value": "esri-satellite"
+              }
+            ]
+          }
+        },
         "autoZoom": {
           "displayName": "Auto zoom",
           "description": "Automatically recenter map to show displayed points when data changes",

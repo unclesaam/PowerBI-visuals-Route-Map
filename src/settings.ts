@@ -97,6 +97,19 @@ export class MapSettingsCard extends formattingSettings.Card {
     name: string = "mapSettings";
     displayName: string = "Map";
 
+    mapStyle = new formattingSettings.ItemDropdown({
+        name: "mapStyle",
+        displayName: "Map Style",
+        items: [
+            { displayName: "OpenStreetMap Standard", value: "osm-standard" },
+            { displayName: "CartoDB Positron (Light)", value: "cartodb-positron" },
+            { displayName: "CartoDB Dark Matter", value: "cartodb-dark" },
+            { displayName: "ESRI World Street Map", value: "esri-street" },
+            { displayName: "ESRI World Imagery", value: "esri-satellite" }
+        ],
+        value: { displayName: "OpenStreetMap Standard", value: "osm-standard" }
+    });
+
     autoZoom = new formattingSettings.ToggleSwitch({
         name: "autoZoom",
         displayName: "Auto zoom",
@@ -111,7 +124,7 @@ export class MapSettingsCard extends formattingSettings.Card {
         value: false
     });
 
-    slices: Array<formattingSettings.Slice> = [this.autoZoom, this.zoomButtons];
+    slices: Array<formattingSettings.Slice> = [this.mapStyle, this.autoZoom, this.zoomButtons];
 }
 
 /**

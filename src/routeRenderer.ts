@@ -48,6 +48,7 @@ export class RouteRenderer {
         this.mapManager.clearRoutes();
         this.mapManager.setAutoZoom(this.formattingSettings.mapSettingsCard.autoZoom.value);
         this.mapManager.setZoomButtons(this.formattingSettings.mapSettingsCard.zoomButtons.value);
+        this.mapManager.setMapStyle(String(this.formattingSettings.mapSettingsCard.mapStyle.value.value));
 
         const lineWidthSetting = this.formattingSettings.routeSettingsCard.lineWidth.value;
         const originBubbleSizeSetting = this.formattingSettings.originBubblesCard.bubbleSize.value;
