@@ -36,6 +36,8 @@ export class DataParser {
         const destLatCol = this.getColumn(categorical, "destLat");
         const destLngCol = this.getColumn(categorical, "destLng");
         const lineWidthCol = this.getColumn(categorical, "lineWidth");
+        const originBubbleSizeCol = this.getColumn(categorical, "originBubbleSize");
+        const destBubbleSizeCol = this.getColumn(categorical, "destBubbleSize");
 
         const getValues = (col: any) => col && "values" in col ? col.values : [];
 
@@ -44,7 +46,9 @@ export class DataParser {
             originLng: parseFloat(getValues(originLngCol)[i]),
             destLat: parseFloat(getValues(destLatCol)[i]),
             destLng: parseFloat(getValues(destLngCol)[i]),
-            lineWidth: parseFloat(getValues(lineWidthCol)[i]) || NaN
+            lineWidth: parseFloat(getValues(lineWidthCol)[i]) || NaN,
+            originBubbleSize: parseFloat(getValues(originBubbleSizeCol)[i]) || NaN,
+            destBubbleSize: parseFloat(getValues(destBubbleSizeCol)[i]) || NaN
         })).filter((route: RouteData) => this.isValidRoute(route));
 
         return data;

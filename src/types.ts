@@ -8,6 +8,8 @@ export interface RouteData {
     destLat: number;
     destLng: number;
     lineWidth: number;
+    originBubbleSize: number;
+    destBubbleSize: number;
     selectionId?: ISelectionId;
 }
 

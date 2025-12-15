@@ -60,6 +60,16 @@ export class RouteRenderer {
         const minValue = hasValidWidths ? Math.min(...validWidths) : 0;
         const maxValue = hasValidWidths ? Math.max(...validWidths) : 1;
 
+        // Calculate min/max for bubble sizes from data
+        const validOriginBubbleSizes = data.map(d => d.originBubbleSize).filter(v => !isNaN(v));
+        const validDestBubbleSizes = data.map(d => d.destBubbleSize).filter(v => !isNaN(v));
+        const hasValidOriginSizes = validOriginBubbleSizes.length > 0;
+        const hasValidDestSizes = validDestBubbleSizes.length > 0;
+        const minOriginSize = hasValidOriginSizes ? Math.min(...validOriginBubbleSizes) : 0;
+        const maxOriginSize = hasValidOriginSizes ? Math.max(...validOriginBubbleSizes) : 1;
+        const minDestSize = hasValidDestSizes ? Math.min(...validDestBubbleSizes) : 0;
+        const maxDestSize = hasValidDestSizes ? Math.max(...validDestBubbleSizes) : 1;
+
         const bounds = L.latLngBounds([]);
 
         const valueColumns = categorical?.values || [];
@@ -89,18 +99,40 @@ export class RouteRenderer {
             destMarkers[destKey].push(route);
         });
 
-        const getOriginRadius = (count: number, max: number) => {
+        const getOriginRadius = (count: number, max: number, route: RouteData) => {
             const minR = originBubbleSizeSetting;
             const maxR = originBubbleSizeSetting * 2.5;
             const scale = Math.sqrt(count / max);
-            return minR + scale * (maxR - minR);
+            let radius = minR + scale * (maxR - minR);
+
+            // Apply data field multiplier if available
+            if (!isNaN(route.originBubbleSize) && hasValidOriginSizes) {
+                const sizeRange = Math.max(maxOriginSize - minOriginSize, 1e-6);
+                const sizeNorm = (route.originBubbleSize - minOriginSize) / sizeRange;
+                // Scale radius by normalized data value (0.5x to 2x)
+                const multiplier = 0.5 + sizeNorm * 1.5;
+                radius *= multiplier;
+            }
+
+            return radius;
         };
 
-        const getDestRadius = (count: number, max: number) => {
+        const getDestRadius = (count: number, max: number, route: RouteData) => {
             const minR = destBubbleSizeSetting;
             const maxR = destBubbleSizeSetting * 2.5;
             const scale = Math.sqrt(count / max);
-            return minR + scale * (maxR - minR);
+            let radius = minR + scale * (maxR - minR);
+
+            // Apply data field multiplier if available
+            if (!isNaN(route.destBubbleSize) && hasValidDestSizes) {
+                const sizeRange = Math.max(maxDestSize - minDestSize, 1e-6);
+                const sizeNorm = (route.destBubbleSize - minDestSize) / sizeRange;
+                // Scale radius by normalized data value (0.5x to 2x)
+                const multiplier = 0.5 + sizeNorm * 1.5;
+                radius *= multiplier;
+            }
+
+            return radius;
         };
 
         const maxOrigin = Math.max(...Object.values(originCounts));
@@ -157,8 +189,12 @@ export class RouteRenderer {
             const originKey = `${route.originLat},${route.originLng}`;
             const destKey = `${route.destLat},${route.destLng}`;
 
-            const originRadius = getOriginRadius(originCounts[originKey], maxOrigin);
-            const destRadius = getDestRadius(destCounts[destKey], maxDest);
+            // Use the first route at each location for size calculation
+            const originRouteForSize = originMarkers[originKey][0];
+            const destRouteForSize = destMarkers[destKey][0];
+
+            const originRadius = getOriginRadius(originCounts[originKey], maxOrigin, originRouteForSize);
+            const destRadius = getDestRadius(destCounts[destKey], maxDest, destRouteForSize);
 
             // Only render origin bubble if show is enabled
             if (this.formattingSettings.originBubblesCard.show.value) {
