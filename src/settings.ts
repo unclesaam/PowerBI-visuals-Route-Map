@@ -34,13 +34,29 @@ export class OriginBubblesCard extends formattingSettings.Card {
     name: string = "originBubbles";
     displayName: string = "Origin Bubbles";
 
+    show = new formattingSettings.ToggleSwitch({
+        name: "show",
+        displayName: "Show",
+        value: true,
+        topLevelToggle: true
+    });
+
     bubbleSize = new formattingSettings.NumUpDown({
         name: "bubbleSize",
         displayName: "Bubble Size",
-        value: 2
+        value: 3
     });
 
-    slices: Array<formattingSettings.Slice> = [this.bubbleSize];
+    bubbleColor = new formattingSettings.ColorPicker({
+        name: "bubbleColor",
+        displayName: "Bubble Color",
+        value: {value: "#007ACC"},
+        instanceKind: powerbi.VisualEnumerationInstanceKinds.ConstantOrRule,
+        selector: dataViewWildcard.createDataViewWildcardSelector(dataViewWildcard.DataViewWildcardMatchingOption.InstancesAndTotals)
+    });
+
+    topLevelSlice = this.show;
+    slices: Array<formattingSettings.Slice> = [this.bubbleSize, this.bubbleColor];
 }
 
 /**
@@ -50,13 +66,28 @@ export class DestinationBubblesCard extends formattingSettings.Card {
     name: string = "destinationBubbles";
     displayName: string = "Destination Bubbles";
 
+    show = new formattingSettings.ToggleSwitch({
+        name: "show",
+        displayName: "Show",
+        value: true
+    });
+
     bubbleSize = new formattingSettings.NumUpDown({
         name: "bubbleSize",
         displayName: "Bubble Size",
-        value: 2
+        value: 3
     });
 
-    slices: Array<formattingSettings.Slice> = [this.bubbleSize];
+    bubbleColor = new formattingSettings.ColorPicker({
+        name: "bubbleColor",
+        displayName: "Bubble Color",
+        value: {value: "#007ACC"},
+        instanceKind: powerbi.VisualEnumerationInstanceKinds.ConstantOrRule,
+        selector: dataViewWildcard.createDataViewWildcardSelector(dataViewWildcard.DataViewWildcardMatchingOption.InstancesAndTotals)
+    });
+
+    topLevelSlice = this.show;
+    slices: Array<formattingSettings.Slice> = [this.bubbleSize, this.bubbleColor];
 }
 
 /**

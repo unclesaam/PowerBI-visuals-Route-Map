@@ -67,15 +67,19 @@ from [John Hagelin](https://github.com/Fruktkorg). Many thanks to him for open-s
 ### Route Settings
 
 - **Line Width** (1-10): Base width for route lines
-- **Line Color**: Default color or set up conditional formatting rules
+- **Line Color**: Default color or set up conditional formatting rules per route
 
 ### Origin Bubbles
 
+- **Show** (Toggle, default: ON): Enable or disable origin bubble markers. When disabled, origin points will not be rendered on the map.
 - **Bubble Size** (1-10): Base size for origin point markers. The actual size scales based on the number of routes originating from each location.
+- **Bubble Color**: Color for origin markers. Supports conditional formatting to color each bubble based on data values.
 
 ### Destination Bubbles
 
+- **Show** (Toggle, default: ON): Enable or disable destination bubble markers. When disabled, destination points will not be rendered on the map.
 - **Bubble Size** (1-10): Base size for destination point markers. The actual size scales based on the number of routes ending at each location.
+- **Bubble Color**: Color for destination markers. Supports conditional formatting to color each bubble based on data values.
 
 ### Map Settings
 
@@ -85,11 +89,19 @@ from [John Hagelin](https://github.com/Fruktkorg). Many thanks to him for open-s
 
 ### How to Apply Conditional Formatting
 
+**For Route Lines:**
 1. In the format pane, find **Route Settings** → **Line Color**
 2. Click the **fx** (conditional formatting) button
 3. Choose "Format by" → Field value or Rules
 4. Set up your color rules (e.g., by airline, delay, volume)
 5. Colors will apply per-route based on your data
+
+**For Bubbles:**
+1. In the format pane, find **Origin Bubbles** → **Bubble Color** (or **Destination Bubbles** → **Bubble Color**)
+2. Click the **fx** (conditional formatting) button
+3. Choose "Format by" → Field value or Rules
+4. Set up your color rules based on your data
+5. Each bubble will be colored according to the data in its row
 
 ---
 

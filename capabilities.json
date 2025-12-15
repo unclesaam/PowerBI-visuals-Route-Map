@@ -112,10 +112,26 @@
     "originBubbles": {
       "displayName": "Origin Bubbles",
       "properties": {
+        "show": {
+          "displayName": "Show",
+          "type": {
+            "bool": true
+          }
+        },
         "bubbleSize": {
           "displayName": "Bubble Size",
           "type": {
             "numeric": true
+          }
+        },
+        "bubbleColor": {
+          "displayName": "Bubble Color",
+          "type": {
+            "fill": {
+              "solid": {
+                "color": true
+              }
+            }
           }
         }
       }
@@ -123,10 +139,26 @@
     "destinationBubbles": {
       "displayName": "Destination Bubbles",
       "properties": {
+        "show": {
+          "displayName": "Show",
+          "type": {
+            "bool": true
+          }
+        },
         "bubbleSize": {
           "displayName": "Bubble Size",
           "type": {
             "numeric": true
+          }
+        },
+        "bubbleColor": {
+          "displayName": "Bubble Color",
+          "type": {
+            "fill": {
+              "solid": {
+                "color": true
+              }
+            }
           }
         }
       }

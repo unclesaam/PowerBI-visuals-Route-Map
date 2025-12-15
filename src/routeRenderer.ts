@@ -113,6 +113,8 @@ export class RouteRenderer {
                 : lineWidthSetting;
 
             const routeColor = this.colorManager.getRouteColor(route, index);
+            const originBubbleColor = this.colorManager.getOriginBubbleColor(route, index);
+            const destBubbleColor = this.colorManager.getDestinationBubbleColor(route, index);
 
             const pathCoordinates: [number, number][] = this.mapManager.getCurvedPathCoordinates(
                 [route.originLat, route.originLng],
@@ -157,27 +159,33 @@ export class RouteRenderer {
             const originRadius = getOriginRadius(originCounts[originKey], maxOrigin);
             const destRadius = getDestRadius(destCounts[destKey], maxDest);
 
-            const originCircle = L.circleMarker([route.originLat, route.originLng], {
-                radius: originRadius,
-                color: lineColor,
-                fillColor: fillColor,
-                fillOpacity: fillOpacity,
-                weight: 2
-            }).addTo(this.mapManager.getRouteGroup());
+            // Only render origin bubble if show is enabled
+            if (this.formattingSettings.originBubblesCard.show.value) {
+                const originCircle = L.circleMarker([route.originLat, route.originLng], {
+                    radius: originRadius,
+                    color: originBubbleColor,
+                    fillColor: originBubbleColor,
+                    fillOpacity: fillOpacity,
+                    weight: 2
+                }).addTo(this.mapManager.getRouteGroup());
 
-            this.addOriginCircleTooltip(originCircle, route, tooltipFields, index);
-            this.addOriginCircleInteraction(originCircle, route, data, viewport, tooltipFields, categorical);
+                this.addOriginCircleTooltip(originCircle, route, tooltipFields, index);
+                this.addOriginCircleInteraction(originCircle, route, data, viewport, tooltipFields, categorical);
+            }
 
-            const destCircle = L.circleMarker([route.destLat, route.destLng], {
-                radius: destRadius,
-                color: lineColor,
-                fillColor: fillColor,
-                fillOpacity: fillOpacity,
-                weight: 2
-            }).addTo(this.mapManager.getRouteGroup());
+            // Only render destination bubble if show is enabled
+            if (this.formattingSettings.destinationBubblesCard.show.value) {
+                const destCircle = L.circleMarker([route.destLat, route.destLng], {
+                    radius: destRadius,
+                    color: destBubbleColor,
+                    fillColor: destBubbleColor,
+                    fillOpacity: fillOpacity,
+                    weight: 2
+                }).addTo(this.mapManager.getRouteGroup());
 
-            this.addDestCircleTooltip(destCircle, route, tooltipFields, index);
-            this.addDestCircleInteraction(destCircle, route, data, viewport, tooltipFields, categorical);
+                this.addDestCircleTooltip(destCircle, route, tooltipFields, index);
+                this.addDestCircleInteraction(destCircle, route, data, viewport, tooltipFields, categorical);
+            }
         });
 
         this.mapManager.fitBounds(bounds);
