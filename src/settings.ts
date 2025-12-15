@@ -28,11 +28,18 @@ export class RouteSettingsCard extends formattingSettings.Card {
 }
 
 /**
- *  Bubble Settings Card
+ * Origin Bubbles Settings Card
  */
-export class BubbleSettingsCard extends formattingSettings.Card {
-    name: string = "bubbleSettings";
-    displayName: string = "Bubbles";
+export class OriginBubblesCard extends formattingSettings.Card {
+    name: string = "originBubbles";
+    displayName: string = "Origin Bubbles";
+
+    show = new formattingSettings.ToggleSwitch({
+        name: "show",
+        displayName: "Show",
+        value: true,
+        topLevelToggle: true
+    });
 
     bubbleSize = new formattingSettings.NumUpDown({
         name: "bubbleSize",
@@ -40,7 +47,84 @@ export class BubbleSettingsCard extends formattingSettings.Card {
         value: 3
     });
 
-    slices: Array<formattingSettings.Slice> = [this.bubbleSize];
+    bubbleColor = new formattingSettings.ColorPicker({
+        name: "bubbleColor",
+        displayName: "Bubble Color",
+        value: {value: "#007ACC"},
+        instanceKind: powerbi.VisualEnumerationInstanceKinds.ConstantOrRule,
+        selector: dataViewWildcard.createDataViewWildcardSelector(dataViewWildcard.DataViewWildcardMatchingOption.InstancesAndTotals)
+    });
+
+    topLevelSlice = this.show;
+    slices: Array<formattingSettings.Slice> = [this.bubbleSize, this.bubbleColor];
+}
+
+/**
+ * Destination Bubbles Settings Card
+ */
+export class DestinationBubblesCard extends formattingSettings.Card {
+    name: string = "destinationBubbles";
+    displayName: string = "Destination Bubbles";
+
+    show = new formattingSettings.ToggleSwitch({
+        name: "show",
+        displayName: "Show",
+        value: true
+    });
+
+    bubbleSize = new formattingSettings.NumUpDown({
+        name: "bubbleSize",
+        displayName: "Bubble Size",
+        value: 3
+    });
+
+    bubbleColor = new formattingSettings.ColorPicker({
+        name: "bubbleColor",
+        displayName: "Bubble Color",
+        value: {value: "#007ACC"},
+        instanceKind: powerbi.VisualEnumerationInstanceKinds.ConstantOrRule,
+        selector: dataViewWildcard.createDataViewWildcardSelector(dataViewWildcard.DataViewWildcardMatchingOption.InstancesAndTotals)
+    });
+
+    topLevelSlice = this.show;
+    slices: Array<formattingSettings.Slice> = [this.bubbleSize, this.bubbleColor];
+}
+
+/**
+ * Map Settings Card
+ */
+export class MapSettingsCard extends formattingSettings.Card {
+    name: string = "mapSettings";
+    displayName: string = "Map";
+
+    mapStyle = new formattingSettings.ItemDropdown({
+        name: "mapStyle",
+        displayName: "Map Style",
+        items: [
+            { displayName: "OpenStreetMap Standard", value: "osm-standard" },
+            { displayName: "CartoDB Positron (Light)", value: "cartodb-positron" },
+            { displayName: "CartoDB Dark Matter", value: "cartodb-dark" },
+            { displayName: "ESRI World Street Map", value: "esri-street" },
+            { displayName: "ESRI World Imagery", value: "esri-satellite" }
+        ],
+        value: { displayName: "OpenStreetMap Standard", value: "osm-standard" }
+    });
+
+    autoZoom = new formattingSettings.ToggleSwitch({
+        name: "autoZoom",
+        displayName: "Auto zoom",
+        description: "Automatically recenter map to show displayed points when data changes",
+        value: true
+    });
+
+    zoomButtons = new formattingSettings.ToggleSwitch({
+        name: "zoomButtons",
+        displayName: "Zoom Buttons",
+        description: "Show zoom buttons in the top-left corner of the map",
+        value: false
+    });
+
+    slices: Array<formattingSettings.Slice> = [this.mapStyle, this.autoZoom, this.zoomButtons];
 }
 
 /**
@@ -48,10 +132,14 @@ export class BubbleSettingsCard extends formattingSettings.Card {
  */
 export class VisualFormattingSettingsModel extends formattingSettings.Model {
     routeSettingsCard = new RouteSettingsCard();
-    bubbleSettingsCard = new BubbleSettingsCard();
+    originBubblesCard = new OriginBubblesCard();
+    destinationBubblesCard = new DestinationBubblesCard();
+    mapSettingsCard = new MapSettingsCard();
 
     cards: formattingSettings.Card[] = [
         this.routeSettingsCard,
-        this.bubbleSettingsCard
+        this.originBubblesCard,
+        this.destinationBubblesCard,
+        this.mapSettingsCard
     ];
 }

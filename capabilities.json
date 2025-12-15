@@ -6,21 +6,13 @@
       "parameters": [
         "https://*.openstreetmap.org",
         "https://unpkg.com",
-        "https://tile.openstreetmap.org"
+        "https://tile.openstreetmap.org",
+        "https://*.basemaps.cartocdn.com",
+        "https://server.arcgisonline.com"
       ]
     }
   ],
   "dataRoles": [
-    {
-      "name": "origin",
-      "kind": "Grouping",
-      "displayName": "Origin",
-      "requiredTypes": [
-        {
-          "text": true
-        }
-      ]
-    },
     {
       "name": "originLat",
       "kind": "GroupingOrMeasure",
@@ -38,16 +30,6 @@
       "requiredTypes": [
         {
           "numeric": true
-        }
-      ]
-    },
-    {
-      "name": "destination",
-      "kind": "Grouping",
-      "displayName": "Destination",
-      "requiredTypes": [
-        {
-          "text": true
         }
       ]
     },
@@ -82,6 +64,26 @@
       ]
     },
     {
+      "name": "originBubbleSize",
+      "kind": "Measure",
+      "displayName": "Origin Bubble Size",
+      "requiredTypes": [
+        {
+          "numeric": true
+        }
+      ]
+    },
+    {
+      "name": "destBubbleSize",
+      "kind": "Measure",
+      "displayName": "Destination Bubble Size",
+      "requiredTypes": [
+        {
+          "numeric": true
+        }
+      ]
+    },
+    {
       "name": "tooltips",
       "kind": "GroupingOrMeasure",
       "displayName": "Tooltips"
@@ -109,13 +111,103 @@
         }
       }
     },
-    "bubbleSettings": {
-      "displayName": "Bubbles Settings",
+    "originBubbles": {
+      "displayName": "Origin Bubbles",
       "properties": {
+        "show": {
+          "displayName": "Show",
+          "type": {
+            "bool": true
+          }
+        },
         "bubbleSize": {
           "displayName": "Bubble Size",
           "type": {
             "numeric": true
+          }
+        },
+        "bubbleColor": {
+          "displayName": "Bubble Color",
+          "type": {
+            "fill": {
+              "solid": {
+                "color": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "destinationBubbles": {
+      "displayName": "Destination Bubbles",
+      "properties": {
+        "show": {
+          "displayName": "Show",
+          "type": {
+            "bool": true
+          }
+        },
+        "bubbleSize": {
+          "displayName": "Bubble Size",
+          "type": {
+            "numeric": true
+          }
+        },
+        "bubbleColor": {
+          "displayName": "Bubble Color",
+          "type": {
+            "fill": {
+              "solid": {
+                "color": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "mapSettings": {
+      "displayName": "Map",
+      "properties": {
+        "mapStyle": {
+          "displayName": "Map Style",
+          "description": "Choose the visual style of the map",
+          "type": {
+            "enumeration": [
+              {
+                "displayName": "OpenStreetMap Standard",
+                "value": "osm-standard"
+              },
+              {
+                "displayName": "CartoDB Positron (Light)",
+                "value": "cartodb-positron"
+              },
+              {
+                "displayName": "CartoDB Dark Matter",
+                "value": "cartodb-dark"
+              },
+              {
+                "displayName": "ESRI World Street Map",
+                "value": "esri-street"
+              },
+              {
+                "displayName": "ESRI World Imagery",
+                "value": "esri-satellite"
+              }
+            ]
+          }
+        },
+        "autoZoom": {
+          "displayName": "Auto zoom",
+          "description": "Automatically recenter map to show displayed points when data changes",
+          "type": {
+            "bool": true
+          }
+        },
+        "zoomButtons": {
+          "displayName": "Zoom Buttons",
+          "description": "Show zoom buttons in the top-left corner of the map",
+          "type": {
+            "bool": true
           }
         }
       }
@@ -130,16 +222,10 @@
     {
       "conditions": [
         {
-          "origin": {
-            "max": 1
-          },
           "originLat": {
             "max": 1
           },
           "originLng": {
-            "max": 1
-          },
-          "destination": {
             "max": 1
           },
           "destLat": {
@@ -150,6 +236,12 @@
           },
           "lineWidth": {
             "max": 1
+          },
+          "originBubbleSize": {
+            "max": 1
+          },
+          "destBubbleSize": {
+            "max": 1
           }
         }
       ],
@@ -158,22 +250,12 @@
           "select": [
             {
               "for": {
-                "in": "origin"
-              }
-            },
-            {
-              "for": {
                 "in": "originLat"
               }
             },
             {
               "for": {
                 "in": "originLng"
-              }
-            },
-            {
-              "for": {
-                "in": "destination"
               }
             },
             {
@@ -189,6 +271,16 @@
             {
               "for": {
                 "in": "lineWidth"
+              }
+            },
+            {
+              "for": {
+                "in": "originBubbleSize"
+              }
+            },
+            {
+              "for": {
+                "in": "destBubbleSize"
               }
             },
             {
@@ -209,22 +301,12 @@
           "select": [
             {
               "for": {
-                "in": "origin"
-              }
-            },
-            {
-              "for": {
                 "in": "originLat"
               }
             },
             {
               "for": {
                 "in": "originLng"
-              }
-            },
-            {
-              "for": {
-                "in": "destination"
               }
             },
             {
@@ -254,6 +336,16 @@
             {
               "for": {
                 "in": "lineWidth"
+              }
+            },
+            {
+              "for": {
+                "in": "originBubbleSize"
+              }
+            },
+            {
+              "for": {
+                "in": "destBubbleSize"
               }
             },
             {

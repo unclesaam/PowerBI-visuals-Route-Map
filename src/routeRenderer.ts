@@ -46,9 +46,13 @@ export class RouteRenderer {
         if (!data.length) return;
 
         this.mapManager.clearRoutes();
+        this.mapManager.setAutoZoom(this.formattingSettings.mapSettingsCard.autoZoom.value);
+        this.mapManager.setZoomButtons(this.formattingSettings.mapSettingsCard.zoomButtons.value);
+        this.mapManager.setMapStyle(String(this.formattingSettings.mapSettingsCard.mapStyle.value.value));
 
         const lineWidthSetting = this.formattingSettings.routeSettingsCard.lineWidth.value;
-        const bubbleSizeSetting = this.formattingSettings.bubbleSettingsCard.bubbleSize.value;
+        const originBubbleSizeSetting = this.formattingSettings.originBubblesCard.bubbleSize.value;
+        const destBubbleSizeSetting = this.formattingSettings.destinationBubblesCard.bubbleSize.value;
 
         const validWidths = data.map(d => d.lineWidth).filter(v => !isNaN(v));
         const hasValidWidths = validWidths.length > 0;
@@ -56,6 +60,16 @@ export class RouteRenderer {
         const maxWidth = lineWidthSetting * 3;
         const minValue = hasValidWidths ? Math.min(...validWidths) : 0;
         const maxValue = hasValidWidths ? Math.max(...validWidths) : 1;
+
+        // Calculate min/max for bubble sizes from data
+        const validOriginBubbleSizes = data.map(d => d.originBubbleSize).filter(v => !isNaN(v));
+        const validDestBubbleSizes = data.map(d => d.destBubbleSize).filter(v => !isNaN(v));
+        const hasValidOriginSizes = validOriginBubbleSizes.length > 0;
+        const hasValidDestSizes = validDestBubbleSizes.length > 0;
+        const minOriginSize = hasValidOriginSizes ? Math.min(...validOriginBubbleSizes) : 0;
+        const maxOriginSize = hasValidOriginSizes ? Math.max(...validOriginBubbleSizes) : 1;
+        const minDestSize = hasValidDestSizes ? Math.min(...validDestBubbleSizes) : 0;
+        const maxDestSize = hasValidDestSizes ? Math.max(...validDestBubbleSizes) : 1;
 
         const bounds = L.latLngBounds([]);
 
@@ -86,11 +100,40 @@ export class RouteRenderer {
             destMarkers[destKey].push(route);
         });
 
-        const getRadius = (count: number, max: number) => {
-            const minR = bubbleSizeSetting;
-            const maxR = bubbleSizeSetting * 2.5;
+        const getOriginRadius = (count: number, max: number, route: RouteData) => {
+            const minR = originBubbleSizeSetting;
+            const maxR = originBubbleSizeSetting * 2.5;
             const scale = Math.sqrt(count / max);
-            return minR + scale * (maxR - minR);
+            let radius = minR + scale * (maxR - minR);
+
+            // Apply data field multiplier if available
+            if (!isNaN(route.originBubbleSize) && hasValidOriginSizes) {
+                const sizeRange = Math.max(maxOriginSize - minOriginSize, 1e-6);
+                const sizeNorm = (route.originBubbleSize - minOriginSize) / sizeRange;
+                // Scale radius by normalized data value (0.5x to 2x)
+                const multiplier = 0.5 + sizeNorm * 1.5;
+                radius *= multiplier;
+            }
+
+            return radius;
+        };
+
+        const getDestRadius = (count: number, max: number, route: RouteData) => {
+            const minR = destBubbleSizeSetting;
+            const maxR = destBubbleSizeSetting * 2.5;
+            const scale = Math.sqrt(count / max);
+            let radius = minR + scale * (maxR - minR);
+
+            // Apply data field multiplier if available
+            if (!isNaN(route.destBubbleSize) && hasValidDestSizes) {
+                const sizeRange = Math.max(maxDestSize - minDestSize, 1e-6);
+                const sizeNorm = (route.destBubbleSize - minDestSize) / sizeRange;
+                // Scale radius by normalized data value (0.5x to 2x)
+                const multiplier = 0.5 + sizeNorm * 1.5;
+                radius *= multiplier;
+            }
+
+            return radius;
         };
 
         const maxOrigin = Math.max(...Object.values(originCounts));
@@ -104,6 +147,8 @@ export class RouteRenderer {
                 : lineWidthSetting;
 
             const routeColor = this.colorManager.getRouteColor(route, index);
+            const originBubbleColor = this.colorManager.getOriginBubbleColor(route, index);
+            const destBubbleColor = this.colorManager.getDestinationBubbleColor(route, index);
 
             const pathCoordinates: [number, number][] = this.mapManager.getCurvedPathCoordinates(
                 [route.originLat, route.originLng],
@@ -145,30 +190,40 @@ export class RouteRenderer {
             const originKey = `${route.originLat},${route.originLng}`;
             const destKey = `${route.destLat},${route.destLng}`;
 
-            const originRadius = getRadius(originCounts[originKey], maxOrigin);
-            const destRadius = getRadius(destCounts[destKey], maxDest);
+            // Use the first route at each location for size calculation
+            const originRouteForSize = originMarkers[originKey][0];
+            const destRouteForSize = destMarkers[destKey][0];
 
-            const originCircle = L.circleMarker([route.originLat, route.originLng], {
-                radius: originRadius,
-                color: lineColor,
-                fillColor: fillColor,
-                fillOpacity: fillOpacity,
-                weight: 2
-            }).addTo(this.mapManager.getRouteGroup());
+            const originRadius = getOriginRadius(originCounts[originKey], maxOrigin, originRouteForSize);
+            const destRadius = getDestRadius(destCounts[destKey], maxDest, destRouteForSize);
 
-            this.addOriginCircleTooltip(originCircle, route, tooltipFields, index);
-            this.addOriginCircleInteraction(originCircle, route, data, viewport, tooltipFields, categorical);
+            // Only render origin bubble if show is enabled
+            if (this.formattingSettings.originBubblesCard.show.value) {
+                const originCircle = L.circleMarker([route.originLat, route.originLng], {
+                    radius: originRadius,
+                    color: originBubbleColor,
+                    fillColor: originBubbleColor,
+                    fillOpacity: fillOpacity,
+                    weight: 2
+                }).addTo(this.mapManager.getRouteGroup());
 
-            const destCircle = L.circleMarker([route.destLat, route.destLng], {
-                radius: destRadius,
-                color: lineColor,
-                fillColor: fillColor,
-                fillOpacity: fillOpacity,
-                weight: 2
-            }).addTo(this.mapManager.getRouteGroup());
+                this.addOriginCircleTooltip(originCircle, route, tooltipFields, index);
+                this.addOriginCircleInteraction(originCircle, route, data, viewport, tooltipFields, categorical);
+            }
 
-            this.addDestCircleTooltip(destCircle, route, tooltipFields, index);
-            this.addDestCircleInteraction(destCircle, route, data, viewport, tooltipFields, categorical);
+            // Only render destination bubble if show is enabled
+            if (this.formattingSettings.destinationBubblesCard.show.value) {
+                const destCircle = L.circleMarker([route.destLat, route.destLng], {
+                    radius: destRadius,
+                    color: destBubbleColor,
+                    fillColor: destBubbleColor,
+                    fillOpacity: fillOpacity,
+                    weight: 2
+                }).addTo(this.mapManager.getRouteGroup());
+
+                this.addDestCircleTooltip(destCircle, route, tooltipFields, index);
+                this.addDestCircleInteraction(destCircle, route, data, viewport, tooltipFields, categorical);
+            }
         });
 
         this.mapManager.fitBounds(bounds);
@@ -197,10 +252,10 @@ export class RouteRenderer {
                 d3PolylineSelection,
                 () => [{
                     displayName: "Origin",
-                    value: route.origin || `${route.originLat}, ${route.originLng}`
+                    value: `${route.originLat}, ${route.originLng}`
                 }, {
                     displayName: "Destination",
-                    value: route.destination || `${route.destLat}, ${route.destLng}`
+                    value: `${route.destLat}, ${route.destLng}`
                 }],
                 () => route.selectionId ? route.selectionId.getSelector() : null
             );
@@ -257,7 +312,7 @@ export class RouteRenderer {
                 d3OriginSelection,
                 () => [{
                     displayName: "Origin",
-                    value: route.origin || `${route.originLat}, ${route.originLng}`
+                    value: `${route.originLat}, ${route.originLng}`
                 }],
                 () => route.selectionId ? route.selectionId.getSelector() : null
             );
@@ -348,7 +403,7 @@ export class RouteRenderer {
                 d3DestSelection,
                 () => [{
                     displayName: "Destination",
-                    value: route.destination || `${route.destLat}, ${route.destLng}`
+                    value: `${route.destLat}, ${route.destLng}`
                 }],
                 () => route.selectionId ? route.selectionId.getSelector() : null
             );

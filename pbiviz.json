@@ -2,9 +2,9 @@
   "visual": {
     "name": "routeMap",
     "displayName": "Route Map",
-    "guid": "routeMapVisualE7A1B2C3",
+    "guid": "routeMapVisualE7A1B2C34",
     "visualClassName": "Visual",
-    "version": "1.0.0.0",
+    "version": "1.0.0.4",
     "description": "Interactive map visual for origin-destination routes with conditional formatting, dynamic scaling, and cross-filtering support",
     "supportUrl": "https://github.com/unclesaam/PowerBI-visuals-Route-Map",
     "gitHubUrl": "https://github.com/unclesaam/PowerBI-visuals-Route-Map"

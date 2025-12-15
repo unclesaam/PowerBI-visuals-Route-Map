@@ -8,19 +8,25 @@ import * as L from "leaflet";
 export class MapManager {
     private map: L.Map;
     private routeGroup: L.LayerGroup;
+    private autoZoom: boolean = true;
+    private zoomControl: L.Control.Zoom | null = null;
+    private currentTileLayer: L.TileLayer | null = null;
+    private currentStyle: string = "osm-standard";
 
-    constructor(mapContainer: HTMLElement) {
+    constructor(mapContainer: HTMLElement, zoomButtons: boolean = false, mapStyle: string = "osm-standard") {
         this.map = L.map(mapContainer, {
-            zoomControl: true,
+            zoomControl: false,
             attributionControl: true
         }).setView([0, 0], 2);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors',
-            maxZoom: 18
-        }).addTo(this.map);
+        this.setMapStyle(mapStyle);
 
         this.routeGroup = L.layerGroup().addTo(this.map);
+
+        if (zoomButtons) {
+            this.zoomControl = L.control.zoom({ position: 'topleft' });
+            this.zoomControl.addTo(this.map);
+        }
     }
 
     public getMap(): L.Map {
@@ -35,14 +41,86 @@ export class MapManager {
         this.map.invalidateSize();
     }
 
+    public setAutoZoom(enabled: boolean): void {
+        this.autoZoom = enabled;
+    }
+
     public fitBounds(bounds: L.LatLngBounds): void {
-        if (bounds.isValid()) {
+        if (this.autoZoom && bounds.isValid()) {
             this.map.fitBounds(bounds);
         }
     }
 
     public clearRoutes(): void {
         this.routeGroup.clearLayers();
+    }
+
+    public setZoomButtons(enabled: boolean): void {
+        if (enabled && !this.zoomControl) {
+            this.zoomControl = L.control.zoom({ position: 'topleft' });
+            this.zoomControl.addTo(this.map);
+        } else if (!enabled && this.zoomControl) {
+            this.map.removeControl(this.zoomControl);
+            this.zoomControl = null;
+        }
+    }
+
+    public setMapStyle(style: string): void {
+        if (this.currentStyle === style && this.currentTileLayer) {
+            return; // No change needed
+        }
+
+        // Remove current tile layer if it exists
+        if (this.currentTileLayer) {
+            this.map.removeLayer(this.currentTileLayer);
+        }
+
+        // Tile layer configurations
+        const tileConfigs: Record<string, { url: string; attribution: string; maxZoom?: number; subdomains?: string }> = {
+            "osm-standard": {
+                url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                attribution: "© OpenStreetMap contributors",
+                maxZoom: 19
+            },
+            "cartodb-positron": {
+                url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+                attribution: "© OpenStreetMap contributors © CARTO",
+                maxZoom: 19,
+                subdomains: "abcd"
+            },
+            "cartodb-dark": {
+                url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+                attribution: "© OpenStreetMap contributors © CARTO",
+                maxZoom: 19,
+                subdomains: "abcd"
+            },
+            "esri-street": {
+                url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
+                attribution: "Tiles © Esri",
+                maxZoom: 19
+            },
+            "esri-satellite": {
+                url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+                attribution: "Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
+                maxZoom: 19
+            }
+        };
+
+        const config = tileConfigs[style] || tileConfigs["osm-standard"];
+
+        const tileOptions: L.TileLayerOptions = {
+            attribution: config.attribution,
+            maxZoom: config.maxZoom || 18
+        };
+
+        if (config.subdomains) {
+            tileOptions.subdomains = config.subdomains;
+        }
+
+        this.currentTileLayer = L.tileLayer(config.url, tileOptions);
+
+        this.currentTileLayer.addTo(this.map);
+        this.currentStyle = style;
     }
 
     public getCurvedPathCoordinates(start: [number, number], end: [number, number]): [number, number][] {
