@@ -209,6 +209,27 @@
           "type": {
             "bool": true
           }
+        },
+        "initialLatitude": {
+          "displayName": "Initial Latitude",
+          "description": "Starting latitude when visual is first loaded",
+          "type": {
+            "numeric": true
+          }
+        },
+        "initialLongitude": {
+          "displayName": "Initial Longitude",
+          "description": "Starting longitude when visual is first loaded",
+          "type": {
+            "numeric": true
+          }
+        },
+        "initialZoom": {
+          "displayName": "Initial Zoom",
+          "description": "Starting zoom level when visual is first loaded",
+          "type": {
+            "numeric": true
+          }
         }
       }
     },

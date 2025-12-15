@@ -43,6 +43,13 @@ export class RouteRenderer {
         tooltipFields: (powerbi.DataViewValueColumn | powerbi.DataViewCategoryColumn)[],
         categorical: powerbi.DataViewCategorical
     ): void {
+        // Set initial view from settings (only applies on first load)
+        this.mapManager.setInitialView(
+            this.formattingSettings.mapSettingsCard.initialLatitude.value,
+            this.formattingSettings.mapSettingsCard.initialLongitude.value,
+            this.formattingSettings.mapSettingsCard.initialZoom.value
+        );
+
         // Always clear routes and apply map settings, even if data is empty
         this.mapManager.clearRoutes();
         this.mapManager.setAutoZoom(this.formattingSettings.mapSettingsCard.autoZoom.value);
@@ -229,6 +236,11 @@ export class RouteRenderer {
         });
 
         this.mapManager.fitBounds(bounds);
+
+        // Mark that we've rendered data (affects initial view behavior)
+        if (data.length > 0) {
+            this.mapManager.markDataRendered();
+        }
     }
 
     private addPolylineTooltip(

@@ -12,6 +12,8 @@ export class MapManager {
     private zoomControl: L.Control.Zoom | null = null;
     private currentTileLayer: L.TileLayer | null = null;
     private currentStyle: string = "osm-standard";
+    private hasRenderedData: boolean = false;
+    private lastInitialSettings: { lat: number; lng: number; zoom: number } | null = null;
 
     constructor(mapContainer: HTMLElement, zoomButtons: boolean = false, mapStyle: string = "osm-standard") {
         this.map = L.map(mapContainer, {
@@ -27,6 +29,23 @@ export class MapManager {
             this.zoomControl = L.control.zoom({ position: 'topleft' });
             this.zoomControl.addTo(this.map);
         }
+    }
+
+    public setInitialView(latitude: number, longitude: number, zoom: number): void {
+        const settingsChanged = !this.lastInitialSettings ||
+            this.lastInitialSettings.lat !== latitude ||
+            this.lastInitialSettings.lng !== longitude ||
+            this.lastInitialSettings.zoom !== zoom;
+
+        // Always update view if settings changed OR if no data has been rendered yet
+        if (settingsChanged || !this.hasRenderedData) {
+            this.map.setView([latitude, longitude], zoom);
+            this.lastInitialSettings = { lat: latitude, lng: longitude, zoom: zoom };
+        }
+    }
+
+    public markDataRendered(): void {
+        this.hasRenderedData = true;
     }
 
     public getMap(): L.Map {
@@ -48,6 +67,7 @@ export class MapManager {
     public fitBounds(bounds: L.LatLngBounds): void {
         if (this.autoZoom && bounds.isValid()) {
             this.map.fitBounds(bounds);
+            this.hasRenderedData = true;
         }
     }
 

@@ -101,13 +101,13 @@ export class MapSettingsCard extends formattingSettings.Card {
         name: "mapStyle",
         displayName: "Map Style",
         items: [
-            { displayName: "OpenStreetMap Standard", value: "osm-standard" },
-            { displayName: "CartoDB Positron (Light)", value: "cartodb-positron" },
-            { displayName: "CartoDB Dark Matter", value: "cartodb-dark" },
-            { displayName: "ESRI World Street Map", value: "esri-street" },
-            { displayName: "ESRI World Imagery", value: "esri-satellite" }
+            {displayName: "OpenStreetMap Standard", value: "osm-standard"},
+            {displayName: "CartoDB Positron (Light)", value: "cartodb-positron"},
+            {displayName: "CartoDB Dark Matter", value: "cartodb-dark"},
+            {displayName: "ESRI World Street Map", value: "esri-street"},
+            {displayName: "ESRI World Imagery", value: "esri-satellite"}
         ],
-        value: { displayName: "OpenStreetMap Standard", value: "osm-standard" }
+        value: {displayName: "OpenStreetMap Standard", value: "osm-standard"}
     });
 
     autoZoom = new formattingSettings.ToggleSwitch({
@@ -124,22 +124,80 @@ export class MapSettingsCard extends formattingSettings.Card {
         value: false
     });
 
-    slices: Array<formattingSettings.Slice> = [this.mapStyle, this.autoZoom, this.zoomButtons];
+    initialLatitude = new formattingSettings.NumUpDown({
+        name: "initialLatitude",
+        displayName: "Initial Latitude",
+        description: "Starting latitude when visual is first loaded",
+        value: 0,
+        options: {
+            minValue: {
+                type: powerbi.visuals.ValidatorType.Min,
+                value: -90
+            },
+            maxValue: {
+                type: powerbi.visuals.ValidatorType.Max,
+                value: 90
+            }
+        }
+    });
+
+    initialLongitude = new formattingSettings.NumUpDown({
+        name: "initialLongitude",
+        displayName: "Initial Longitude",
+        description: "Starting longitude when visual is first loaded",
+        value: 0,
+        options: {
+            minValue: {
+                type: powerbi.visuals.ValidatorType.Min,
+                value: -180
+            },
+            maxValue: {
+                type: powerbi.visuals.ValidatorType.Max,
+                value: 180
+            }
+        }
+    });
+
+    initialZoom = new formattingSettings.NumUpDown({
+        name: "initialZoom",
+        displayName: "Initial Zoom",
+        description: "Starting zoom level when visual is first loaded",
+        value: 2,
+        options: {
+            minValue: {
+                type: powerbi.visuals.ValidatorType.Min,
+                value: 1
+            },
+            maxValue: {
+                type: powerbi.visuals.ValidatorType.Max,
+                value: 18
+            }
+        }
+    });
+
+    slices: Array<formattingSettings.Slice> = [
+        this.mapStyle,
+        this.autoZoom,
+        this.zoomButtons,
+        this.initialLatitude,
+        this.initialLongitude,
+        this.initialZoom
+    ];
 }
 
 /**
  * Visual settings model class
  */
 export class VisualFormattingSettingsModel extends formattingSettings.Model {
+    mapSettingsCard = new MapSettingsCard();
     routeSettingsCard = new RouteSettingsCard();
     originBubblesCard = new OriginBubblesCard();
     destinationBubblesCard = new DestinationBubblesCard();
-    mapSettingsCard = new MapSettingsCard();
 
     cards: formattingSettings.Card[] = [
+        this.mapSettingsCard,
         this.routeSettingsCard,
         this.originBubblesCard,
         this.destinationBubblesCard,
-        this.mapSettingsCard
     ];
 }
