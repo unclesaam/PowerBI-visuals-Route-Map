@@ -43,12 +43,14 @@ export class RouteRenderer {
         tooltipFields: (powerbi.DataViewValueColumn | powerbi.DataViewCategoryColumn)[],
         categorical: powerbi.DataViewCategorical
     ): void {
-        if (!data.length) return;
-
+        // Always clear routes and apply map settings, even if data is empty
         this.mapManager.clearRoutes();
         this.mapManager.setAutoZoom(this.formattingSettings.mapSettingsCard.autoZoom.value);
         this.mapManager.setZoomButtons(this.formattingSettings.mapSettingsCard.zoomButtons.value);
         this.mapManager.setMapStyle(String(this.formattingSettings.mapSettingsCard.mapStyle.value.value));
+
+        // If no data, just return after clearing
+        if (!data.length) return;
 
         const lineWidthSetting = this.formattingSettings.routeSettingsCard.lineWidth.value;
         const originBubbleSizeSetting = this.formattingSettings.originBubblesCard.bubbleSize.value;
